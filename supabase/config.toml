@@ -2,3 +2,6 @@ project_id = "nvejvtowgiqalfzqberx"
 
 [functions.analyze-skills]
 verify_jwt = false
+
+[functions.compare-careers]
+verify_jwt = false
