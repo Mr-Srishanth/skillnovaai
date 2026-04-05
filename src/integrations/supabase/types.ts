@@ -14,7 +14,60 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      analysis_history: {
+        Row: {
+          created_at: string
+          id: string
+          missing_skills: Json
+          recommended_learning: Json
+          roadmap: Json
+          skill_score: number | null
+          skills: string
+          target_role: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          missing_skills?: Json
+          recommended_learning?: Json
+          roadmap?: Json
+          skill_score?: number | null
+          skills: string
+          target_role: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          missing_skills?: Json
+          recommended_learning?: Json
+          roadmap?: Json
+          skill_score?: number | null
+          skills?: string
+          target_role?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          display_name: string | null
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          display_name?: string | null
+          id: string
+        }
+        Update: {
+          created_at?: string
+          display_name?: string | null
+          id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
