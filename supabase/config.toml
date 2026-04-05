@@ -1,1 +1,4 @@
 project_id = "nvejvtowgiqalfzqberx"
+
+[functions.analyze-skills]
+verify_jwt = false
