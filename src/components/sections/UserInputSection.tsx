@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { useState } from "react";
+import { validateSkills, validateRole } from "@/lib/validation";
 
 interface Props {
   onAnalyze: (skills: string, role: string) => void;
@@ -9,9 +10,15 @@ interface Props {
 const UserInputSection = ({ onAnalyze, isLoading }: Props) => {
   const [skills, setSkills] = useState("");
   const [role, setRole] = useState("");
+  const [skillsError, setSkillsError] = useState("");
+  const [roleError, setRoleError] = useState("");
 
   const handleSubmit = () => {
-    if (skills.trim() && role.trim()) {
+    const sv = validateSkills(skills);
+    const rv = validateRole(role);
+    setSkillsError(sv.valid ? "" : sv.error || "");
+    setRoleError(rv.valid ? "" : rv.error || "");
+    if (sv.valid && rv.valid) {
       onAnalyze(skills, role);
     }
   };
@@ -40,10 +47,17 @@ const UserInputSection = ({ onAnalyze, isLoading }: Props) => {
             <input
               type="text"
               value={skills}
-              onChange={(e) => setSkills(e.target.value)}
-              placeholder="e.g. HTML, CSS, JavaScript, React"
-              className="w-full bg-muted/50 border border-border rounded-lg px-4 py-3 text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+              onChange={(e) => { setSkills(e.target.value); setSkillsError(""); }}
+              placeholder="e.g. Python, SQL, React, JavaScript"
+              className={`w-full bg-muted/50 border rounded-lg px-4 py-3 text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 transition-all ${
+                skillsError ? "border-destructive focus:ring-destructive/50" : "border-border focus:ring-primary/50"
+              }`}
             />
+            {skillsError && (
+              <motion.p initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} className="text-xs text-destructive mt-2">
+                {skillsError}
+              </motion.p>
+            )}
           </motion.div>
 
           <motion.div
@@ -56,10 +70,17 @@ const UserInputSection = ({ onAnalyze, isLoading }: Props) => {
             <input
               type="text"
               value={role}
-              onChange={(e) => setRole(e.target.value)}
+              onChange={(e) => { setRole(e.target.value); setRoleError(""); }}
               placeholder="e.g. Full Stack Developer"
-              className="w-full bg-muted/50 border border-border rounded-lg px-4 py-3 text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+              className={`w-full bg-muted/50 border rounded-lg px-4 py-3 text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 transition-all ${
+                roleError ? "border-destructive focus:ring-destructive/50" : "border-border focus:ring-primary/50"
+              }`}
             />
+            {roleError && (
+              <motion.p initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} className="text-xs text-destructive mt-2">
+                {roleError}
+              </motion.p>
+            )}
           </motion.div>
 
           <motion.button
@@ -70,7 +91,7 @@ const UserInputSection = ({ onAnalyze, isLoading }: Props) => {
             whileHover={{ scale: 1.03, boxShadow: "0 0 30px hsl(217 91% 60% / 0.5)" }}
             whileTap={{ scale: 0.97 }}
             onClick={handleSubmit}
-            disabled={isLoading || !skills.trim() || !role.trim()}
+            disabled={isLoading}
             className="w-full py-4 rounded-lg font-display font-bold text-lg bg-gradient-to-r from-primary to-accent text-primary-foreground disabled:opacity-40 transition-all"
           >
             {isLoading ? "Analyzing..." : "Analyze My Future"}
