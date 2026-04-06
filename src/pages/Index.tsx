@@ -28,6 +28,11 @@ const Index = () => {
 
       if (error) throw error;
 
+      if (data?.validationFailed || data?.error) {
+        toast.error(data.error || "Invalid input. Please try again.");
+        return;
+      }
+
       setResult(data as AnalysisResult);
 
       setTimeout(() => {

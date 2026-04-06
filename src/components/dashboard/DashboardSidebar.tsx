@@ -9,6 +9,7 @@ interface Props {
 }
 
 const tabs: { id: DashboardTab; label: string; icon: string }[] = [
+  { id: "overview", label: "Overview", icon: "🏠" },
   { id: "analyze", label: "Analyze", icon: "🧠" },
   { id: "history", label: "History", icon: "📋" },
   { id: "compare", label: "Compare", icon: "⚖️" },
@@ -26,9 +27,10 @@ const DashboardSidebar = ({ activeTab, onTabChange, displayName, onSignOut }: Pr
 
       <nav className="flex-1 p-4 space-y-1">
         {tabs.map((tab) => (
-          <button
+          <motion.button
             key={tab.id}
             onClick={() => onTabChange(tab.id)}
+            whileHover={{ x: 4 }}
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-all ${
               activeTab === tab.id
                 ? "bg-primary/15 text-primary font-medium"
@@ -43,7 +45,7 @@ const DashboardSidebar = ({ activeTab, onTabChange, displayName, onSignOut }: Pr
                 className="ml-auto w-1.5 h-1.5 rounded-full bg-primary"
               />
             )}
-          </button>
+          </motion.button>
         ))}
       </nav>
 
