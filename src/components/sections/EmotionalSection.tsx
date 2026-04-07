@@ -2,15 +2,21 @@ import { motion } from "framer-motion";
 
 const EmotionalSection = () => (
   <section className="scene-section">
-    {/* Subtle red/purple ambient glow */}
+    {/* Darker ambient — emotional weight */}
+    <div className="absolute inset-0 bg-background/40 pointer-events-none" />
     <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-      <div className="w-[600px] h-[600px] rounded-full bg-neon-red/10 blur-[120px]" />
+      <motion.div
+        animate={{ scale: [1, 1.1, 1], opacity: [0.08, 0.15, 0.08] }}
+        transition={{ duration: 6, repeat: Infinity }}
+        className="w-[600px] h-[600px] rounded-full bg-neon-red/10 blur-[120px]"
+      />
     </div>
+
     <div className="relative z-10 text-center px-6 max-w-3xl space-y-8">
       <motion.p
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
-        transition={{ duration: 1.2 }}
+        transition={{ duration: 0.8, delay: 0.5 }}
         viewport={{ once: true }}
         className="text-2xl md:text-5xl font-display font-bold text-foreground"
       >
@@ -19,7 +25,7 @@ const EmotionalSection = () => (
       <motion.p
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
-        transition={{ duration: 1.2, delay: 0.5 }}
+        transition={{ duration: 0.8, delay: 1.0 }}
         viewport={{ once: true }}
         className="text-xl md:text-4xl font-display font-semibold text-neon-red"
       >

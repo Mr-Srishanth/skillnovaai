@@ -10,7 +10,7 @@ const ImpactSection = () => (
           key={i}
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
-          transition={{ duration: 1.2, delay: i * 0.5 }}
+          transition={{ duration: 0.8, delay: i * 0.5 }}
           viewport={{ once: true }}
           className={`text-2xl md:text-5xl font-display font-bold ${
             i === 2 ? "gradient-text" : "text-foreground"

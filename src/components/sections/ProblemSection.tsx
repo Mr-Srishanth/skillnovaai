@@ -1,6 +1,10 @@
 import { motion } from "framer-motion";
 
-const lines = ["Courses completed...", "Certificates earned...", "Still... no direction."];
+const lines = [
+  { text: "Courses completed...", delay: 0.5 },
+  { text: "Certificates earned...", delay: 1.2 },
+  { text: "Still... no direction.", delay: 2.0 },
+];
 
 const ProblemSection = () => (
   <section className="scene-section">
@@ -8,15 +12,15 @@ const ProblemSection = () => (
       {lines.map((line, i) => (
         <motion.p
           key={i}
-          initial={{ opacity: 0, x: i % 2 === 0 ? -60 : 60 }}
-          whileInView={{ opacity: 1, x: 0 }}
-          transition={{ duration: 1, delay: i * 0.4, ease: "easeOut" }}
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: line.delay, ease: "easeOut" }}
           viewport={{ once: true, amount: 0.5 }}
           className={`text-2xl md:text-5xl font-display font-semibold ${
             i === 2 ? "gradient-text" : "text-foreground"
           }`}
         >
-          {line}
+          {line.text}
         </motion.p>
       ))}
     </div>
