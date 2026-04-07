@@ -50,7 +50,6 @@ export default {
           foreground: "hsl(var(--card-foreground))",
         },
         neon: {
-          cyan: "hsl(var(--neon-cyan))",
           blue: "hsl(var(--neon-blue))",
           purple: "hsl(var(--neon-purple))",
           red: "hsl(var(--neon-red))",
@@ -98,7 +97,6 @@ export default {
         "accordion-up": "accordion-up 0.2s ease-out",
         float: "float 6s ease-in-out infinite",
         "pulse-glow": "pulse-glow 2s ease-in-out infinite",
-        "btn-pulse": "btn-pulse 2s ease-in-out infinite",
       },
     },
   },

@@ -25,26 +25,19 @@ const ProcessingSection = ({ visible }: { visible: boolean }) => {
 
   return (
     <section className="scene-section">
-      {/* Background dim */}
-      <div className="absolute inset-0 bg-background/60 pointer-events-none" />
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-        <motion.div
-          animate={{ scale: [1, 1.2, 1], opacity: [0.08, 0.15, 0.08] }}
-          transition={{ duration: 3, repeat: Infinity }}
-          className="w-[400px] h-[400px] rounded-full bg-neon-cyan/10 blur-[100px]"
-        />
+        <div className="w-[400px] h-[400px] rounded-full bg-primary/10 blur-[100px] animate-pulse-glow" />
+        <div className="absolute w-[300px] h-[300px] rounded-full bg-accent/10 blur-[80px] animate-pulse-glow" style={{ animationDelay: "0.5s" }} />
       </div>
-
       <div className="relative z-10 text-center space-y-8">
         <motion.h3
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ duration: 0.6 }}
-          className="text-3xl md:text-5xl font-display font-bold neon-glow-cyan"
+          transition={{ duration: 1 }}
+          className="text-3xl md:text-5xl font-display font-bold neon-glow-blue"
         >
           SkillNova is thinking...
         </motion.h3>
-
         <AnimatePresence mode="wait">
           <motion.p
             key={step}
@@ -57,14 +50,12 @@ const ProcessingSection = ({ visible }: { visible: boolean }) => {
             {THINKING_STEPS[step]}
           </motion.p>
         </AnimatePresence>
-
-        {/* Pulse dots — 1s loop */}
         <div className="flex justify-center gap-3">
           {[0, 1, 2].map((i) => (
             <motion.div
               key={i}
               animate={{ scale: [1, 1.4, 1], opacity: [0.4, 1, 0.4] }}
-              transition={{ duration: 1, repeat: Infinity, delay: i * 0.2 }}
+              transition={{ duration: 1.5, repeat: Infinity, delay: i * 0.3 }}
               className="w-4 h-4 rounded-full bg-primary"
             />
           ))}

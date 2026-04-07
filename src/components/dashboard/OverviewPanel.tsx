@@ -76,7 +76,7 @@ const OverviewPanel = ({ userId, displayName }: Props) => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="glass-card box-glow-cyan text-center"
+          className="glass-card p-6 box-glow-blue text-center"
         >
           <p className="text-xs text-muted-foreground mb-2 font-medium uppercase tracking-wider">Latest Score</p>
           <div className={`text-4xl font-display font-black ${scoreColor}`}>
@@ -94,7 +94,7 @@ const OverviewPanel = ({ userId, displayName }: Props) => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="glass-card box-glow-purple text-center"
+          className="glass-card p-6 box-glow-purple text-center"
         >
           <p className="text-xs text-muted-foreground mb-2 font-medium uppercase tracking-wider">Total Analyses</p>
           <div className="text-4xl font-display font-black text-foreground">{totalAnalyses}</div>
@@ -104,7 +104,7 @@ const OverviewPanel = ({ userId, displayName }: Props) => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="glass-card box-glow-cyan text-center"
+          className="glass-card p-6 box-glow-blue text-center"
         >
           <p className="text-xs text-muted-foreground mb-2 font-medium uppercase tracking-wider">Roles Explored</p>
           <div className="text-4xl font-display font-black text-foreground">{uniqueRoles}</div>
@@ -122,7 +122,7 @@ const OverviewPanel = ({ userId, displayName }: Props) => {
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.5 + i * 0.08 }}
-                className="glass-card !p-4 flex items-center justify-between"
+                className="glass-card p-4 flex items-center justify-between"
               >
                 <div>
                   <p className="font-display font-bold text-sm text-foreground">{item.target_role}</p>

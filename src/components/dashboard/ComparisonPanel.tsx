@@ -83,19 +83,17 @@ const ComparisonPanel = () => {
       </h2>
 
       {/* Mode toggle */}
-      <div className="glass-card !p-1.5 inline-flex rounded-xl mb-8">
+      <div className="glass-card p-1.5 inline-flex rounded-xl mb-8">
         {(["current-vs-target", "role-vs-role"] as CompareMode[]).map((m) => (
-          <motion.button
+          <button
             key={m}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.97 }}
             onClick={() => { setMode(m); setResult(null); setSkillsError(""); setRoleAError(""); setRoleBError(""); }}
-            className={`px-5 py-2.5 rounded-lg text-sm font-display font-medium transition-all ${
-              mode === m ? "bg-primary/20 text-primary box-glow-cyan" : "text-muted-foreground hover:text-foreground"
+            className={`px-5 py-2.5 rounded-lg text-sm font-medium transition-all ${
+              mode === m ? "bg-primary/20 text-primary" : "text-muted-foreground hover:text-foreground"
             }`}
           >
             {m === "current-vs-target" ? "Current vs Target" : "Role vs Role"}
-          </motion.button>
+          </button>
         ))}
       </div>
 
@@ -107,7 +105,7 @@ const ComparisonPanel = () => {
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: 20 }}
           transition={{ duration: 0.3 }}
-          className="glass-card box-glow-purple space-y-5 mb-8"
+          className="glass-card p-8 box-glow-purple space-y-5 mb-8"
         >
           {mode === "current-vs-target" && (
             <div>
@@ -117,7 +115,9 @@ const ComparisonPanel = () => {
                 value={skills}
                 onChange={(e) => { setSkills(e.target.value); setSkillsError(""); }}
                 placeholder="e.g. HTML, CSS, JavaScript"
-                className={`scene-input ${skillsError ? "error" : ""}`}
+                className={`w-full bg-muted/50 border rounded-lg px-4 py-3 text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 transition-all ${
+                  skillsError ? "border-destructive focus:ring-destructive/50" : "border-border focus:ring-primary/50"
+                }`}
               />
               {skillsError && <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-xs text-destructive mt-2">{skillsError}</motion.p>}
             </div>
@@ -133,7 +133,9 @@ const ComparisonPanel = () => {
                 value={roleA}
                 onChange={(e) => { setRoleA(e.target.value); setRoleAError(""); }}
                 placeholder="e.g. Frontend Developer"
-                className={`scene-input ${roleAError ? "error" : ""}`}
+                className={`w-full bg-muted/50 border rounded-lg px-4 py-3 text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 transition-all ${
+                  roleAError ? "border-destructive focus:ring-destructive/50" : "border-border focus:ring-primary/50"
+                }`}
               />
               {roleAError && <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-xs text-destructive mt-2">{roleAError}</motion.p>}
             </div>
@@ -145,7 +147,9 @@ const ComparisonPanel = () => {
                   value={roleB}
                   onChange={(e) => { setRoleB(e.target.value); setRoleBError(""); }}
                   placeholder="e.g. Backend Developer"
-                  className={`scene-input ${roleBError ? "error" : ""}`}
+                  className={`w-full bg-muted/50 border rounded-lg px-4 py-3 text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 transition-all ${
+                    roleBError ? "border-destructive focus:ring-destructive/50" : "border-border focus:ring-primary/50"
+                  }`}
                 />
                 {roleBError && <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-xs text-destructive mt-2">{roleBError}</motion.p>}
               </div>
@@ -153,39 +157,15 @@ const ComparisonPanel = () => {
           </div>
 
           <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.97 }}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
             onClick={handleCompare}
             disabled={loading}
-            className="w-full py-3.5 rounded-xl font-display font-bold bg-primary text-primary-foreground disabled:opacity-40 transition-all animate-btn-pulse"
+            className="w-full py-3.5 rounded-lg font-display font-bold bg-gradient-to-r from-accent to-primary text-primary-foreground disabled:opacity-40 transition-all"
           >
             {loading ? "Comparing..." : "Compare Now"}
           </motion.button>
         </motion.div>
-      </AnimatePresence>
-
-      {/* Loading */}
-      <AnimatePresence>
-        {loading && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="glass-card mb-8 text-center"
-          >
-            <div className="flex justify-center gap-2">
-              {[0, 1, 2].map((i) => (
-                <motion.div
-                  key={i}
-                  animate={{ scale: [1, 1.4, 1], opacity: [0.4, 1, 0.4] }}
-                  transition={{ duration: 1, repeat: Infinity, delay: i * 0.2 }}
-                  className="w-3 h-3 rounded-full bg-primary"
-                />
-              ))}
-            </div>
-            <p className="text-sm text-muted-foreground mt-3">AI is comparing...</p>
-          </motion.div>
-        )}
       </AnimatePresence>
 
       {/* Results */}
@@ -193,7 +173,7 @@ const ComparisonPanel = () => {
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-8">
           {/* Readiness score */}
           {result.readinessScore != null && (
-            <div className="glass-card box-glow-cyan text-center">
+            <div className="glass-card p-6 box-glow-blue text-center">
               <p className="text-sm text-muted-foreground mb-2 font-medium">Readiness Score</p>
               <motion.div
                 initial={{ scale: 0 }}
@@ -210,7 +190,7 @@ const ComparisonPanel = () => {
 
           {/* Reasoning */}
           {result.reasoning && (
-            <div className="glass-card box-glow-purple">
+            <div className="glass-card p-6 box-glow-purple">
               <h4 className="text-sm font-display font-bold gradient-text mb-3 flex items-center gap-2">
                 <span>🧠</span> AI Reasoning
               </h4>
@@ -221,7 +201,7 @@ const ComparisonPanel = () => {
           {/* Side-by-side cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {[
-              { label: result.leftLabel, skills: result.leftSkills, difficulty: result.leftDifficulty, time: result.leftTimeToLearn, glow: "box-glow-cyan" },
+              { label: result.leftLabel, skills: result.leftSkills, difficulty: result.leftDifficulty, time: result.leftTimeToLearn, glow: "box-glow-blue" },
               { label: result.rightLabel, skills: result.rightSkills, difficulty: result.rightDifficulty, time: result.rightTimeToLearn, glow: "box-glow-purple" },
             ].map((side, i) => (
               <motion.div
@@ -229,7 +209,7 @@ const ComparisonPanel = () => {
                 initial={{ opacity: 0, x: i === 0 ? -30 : 30 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.3 + i * 0.15 }}
-                className={`glass-card ${side.glow}`}
+                className={`glass-card p-6 ${side.glow}`}
               >
                 <h4 className="font-display font-bold text-lg text-foreground mb-4">{side.label}</h4>
                 <div className="mb-4">
@@ -243,8 +223,8 @@ const ComparisonPanel = () => {
                   </ul>
                 </div>
                 <div className="flex gap-3 mt-4">
-                  <span className="tag-medium">{side.difficulty}</span>
-                  <span className="tag-low">{side.time}</span>
+                  <span className="text-xs px-3 py-1.5 rounded-full bg-primary/15 text-primary font-medium">{side.difficulty}</span>
+                  <span className="text-xs px-3 py-1.5 rounded-full bg-accent/15 text-accent font-medium">{side.time}</span>
                 </div>
               </motion.div>
             ))}
@@ -252,7 +232,7 @@ const ComparisonPanel = () => {
 
           {/* AI Insights */}
           {result.insights.length > 0 && (
-            <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }} className="glass-card box-glow-cyan">
+            <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }} className="glass-card p-6 box-glow-blue">
               <h4 className="font-display font-bold text-lg gradient-text mb-4">AI Insights</h4>
               <ul className="space-y-3">
                 {result.insights.map((insight, i) => (

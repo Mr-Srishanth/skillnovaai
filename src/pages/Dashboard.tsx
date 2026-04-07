@@ -51,14 +51,14 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background depth-bg flex">
+    <div className="min-h-screen bg-background flex">
       <DashboardSidebar
         activeTab={activeTab}
         onTabChange={setActiveTab}
         displayName={displayName}
         onSignOut={handleSignOut}
       />
-      <main className="flex-1 p-6 md:p-10 overflow-y-auto relative z-10">
+      <main className="flex-1 p-6 md:p-10 overflow-y-auto">
         <motion.div
           key={activeTab}
           initial={{ opacity: 0, y: 20 }}

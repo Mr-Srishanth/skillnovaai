@@ -47,7 +47,7 @@ const Index = () => {
   };
 
   return (
-    <div className="bg-background depth-bg">
+    <div className="bg-background">
       <HeroSection />
       <ProblemSection />
       <EmotionalSection />
