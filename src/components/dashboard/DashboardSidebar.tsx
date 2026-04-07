@@ -30,15 +30,16 @@ const DashboardSidebar = ({ activeTab, onTabChange, displayName, onSignOut }: Pr
           <motion.button
             key={tab.id}
             onClick={() => onTabChange(tab.id)}
-            whileHover={{ x: 4 }}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-all ${
+            whileHover={{ x: 4, scale: 1.02 }}
+            whileTap={{ scale: 0.97 }}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all ${
               activeTab === tab.id
-                ? "bg-primary/15 text-primary font-medium"
-                : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                ? "bg-primary/15 text-primary font-medium box-glow-cyan"
+                : "text-muted-foreground hover:text-foreground hover:bg-muted/30"
             }`}
           >
             <span className="text-lg">{tab.icon}</span>
-            <span className="text-sm">{tab.label}</span>
+            <span className="text-sm font-display">{tab.label}</span>
             {activeTab === tab.id && (
               <motion.div
                 layoutId="sidebar-active"
@@ -52,13 +53,13 @@ const DashboardSidebar = ({ activeTab, onTabChange, displayName, onSignOut }: Pr
       <div className="p-4 border-t border-sidebar-border space-y-2">
         <a
           href="/"
-          className="block text-sm text-muted-foreground hover:text-foreground px-4 py-2 transition-colors"
+          className="block text-sm text-muted-foreground hover:text-foreground px-4 py-2 transition-colors rounded-lg hover:bg-muted/20"
         >
           ← Back to experience
         </a>
         <button
           onClick={onSignOut}
-          className="w-full text-sm text-muted-foreground hover:text-destructive px-4 py-2 text-left transition-colors"
+          className="w-full text-sm text-muted-foreground hover:text-destructive px-4 py-2 text-left transition-colors rounded-lg hover:bg-destructive/10"
         >
           Sign out
         </button>

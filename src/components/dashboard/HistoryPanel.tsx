@@ -62,7 +62,7 @@ const HistoryPanel = ({ userId }: { userId: string }) => {
       </h2>
 
       {history.length === 0 ? (
-        <div className="glass-card p-8 text-center text-muted-foreground">
+        <div className="glass-card text-center text-muted-foreground">
           <p>No analyses yet. Start by running your first skill analysis!</p>
         </div>
       ) : (
@@ -73,11 +73,11 @@ const HistoryPanel = ({ userId }: { userId: string }) => {
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.08 }}
-              className="glass-card overflow-hidden"
+              className="glass-card !p-0 overflow-hidden"
             >
               <button
                 onClick={() => setExpandedId(expandedId === item.id ? null : item.id)}
-                className="w-full p-5 flex items-center justify-between text-left hover:bg-muted/20 transition-colors"
+                className="w-full p-5 flex items-center justify-between text-left hover:bg-muted/10 transition-colors"
               >
                 <div>
                   <p className="font-display font-bold text-foreground">{item.target_role}</p>
@@ -103,11 +103,11 @@ const HistoryPanel = ({ userId }: { userId: string }) => {
                     animate={{ height: "auto", opacity: 1 }}
                     exit={{ height: 0, opacity: 0 }}
                     transition={{ duration: 0.3 }}
-                    className="border-t border-border"
+                    className="border-t border-border/30"
                   >
                     <div className="p-5 space-y-4">
                       <div>
-                        <h5 className="text-sm font-medium text-primary mb-2">Missing Skills</h5>
+                        <h5 className="text-sm font-display font-medium text-primary mb-2">Missing Skills</h5>
                         <ul className="space-y-1">
                           {item.missing_skills.map((s, j) => (
                             <li key={j} className="text-sm text-foreground/80 flex gap-2">
@@ -117,7 +117,7 @@ const HistoryPanel = ({ userId }: { userId: string }) => {
                         </ul>
                       </div>
                       <div>
-                        <h5 className="text-sm font-medium text-primary mb-2">Recommended Learning</h5>
+                        <h5 className="text-sm font-display font-medium text-primary mb-2">Recommended Learning</h5>
                         <ul className="space-y-1">
                           {item.recommended_learning.map((s, j) => (
                             <li key={j} className="text-sm text-foreground/80 flex gap-2">
@@ -127,11 +127,11 @@ const HistoryPanel = ({ userId }: { userId: string }) => {
                         </ul>
                       </div>
                       <div>
-                        <h5 className="text-sm font-medium text-primary mb-2">Roadmap</h5>
+                        <h5 className="text-sm font-display font-medium text-primary mb-2">Roadmap</h5>
                         <ul className="space-y-1">
                           {item.roadmap.map((s, j) => (
                             <li key={j} className="text-sm text-foreground/80 flex gap-2">
-                              <span className="text-primary">Step {j + 1}:</span> {s}
+                              <span className="text-primary font-display">Step {j + 1}:</span> {s}
                             </li>
                           ))}
                         </ul>
