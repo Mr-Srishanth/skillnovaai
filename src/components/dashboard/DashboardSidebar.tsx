@@ -11,6 +11,9 @@ interface Props {
 const tabs: { id: DashboardTab; label: string; icon: string }[] = [
   { id: "overview", label: "Overview", icon: "🏠" },
   { id: "analyze", label: "Analyze", icon: "🧠" },
+  { id: "mentor", label: "AI Mentor", icon: "🤖" },
+  { id: "resume", label: "Resume ATS", icon: "📄" },
+  { id: "simulator", label: "Simulator", icon: "🔮" },
   { id: "history", label: "History", icon: "📋" },
   { id: "compare", label: "Compare", icon: "⚖️" },
 ];

@@ -9,8 +9,11 @@ import OverviewPanel from "@/components/dashboard/OverviewPanel";
 import HistoryPanel from "@/components/dashboard/HistoryPanel";
 import ComparisonPanel from "@/components/dashboard/ComparisonPanel";
 import AnalyzePanel from "@/components/dashboard/AnalyzePanel";
+import MentorPanel from "@/components/dashboard/MentorPanel";
+import ResumePanel from "@/components/dashboard/ResumePanel";
+import SimulatorPanel from "@/components/dashboard/SimulatorPanel";
 
-export type DashboardTab = "overview" | "analyze" | "history" | "compare";
+export type DashboardTab = "overview" | "analyze" | "mentor" | "resume" | "simulator" | "history" | "compare";
 
 const Dashboard = () => {
   const { user, loading, signOut } = useAuth();
@@ -67,6 +70,9 @@ const Dashboard = () => {
         >
           {activeTab === "overview" && <OverviewPanel userId={user.id} displayName={displayName} />}
           {activeTab === "analyze" && <AnalyzePanel userId={user.id} />}
+          {activeTab === "mentor" && <MentorPanel userId={user.id} userContext={{ goal: "", skills: "", score: null }} />}
+          {activeTab === "resume" && <ResumePanel userId={user.id} />}
+          {activeTab === "simulator" && <SimulatorPanel userId={user.id} />}
           {activeTab === "history" && <HistoryPanel userId={user.id} />}
           {activeTab === "compare" && <ComparisonPanel />}
         </motion.div>
