@@ -50,6 +50,42 @@ export type Database = {
         }
         Relationships: []
       }
+      gamification: {
+        Row: {
+          badges: Json
+          created_at: string
+          id: string
+          last_active: string | null
+          level: string
+          streak_days: number
+          updated_at: string
+          user_id: string
+          xp: number
+        }
+        Insert: {
+          badges?: Json
+          created_at?: string
+          id?: string
+          last_active?: string | null
+          level?: string
+          streak_days?: number
+          updated_at?: string
+          user_id: string
+          xp?: number
+        }
+        Update: {
+          badges?: Json
+          created_at?: string
+          id?: string
+          last_active?: string | null
+          level?: string
+          streak_days?: number
+          updated_at?: string
+          user_id?: string
+          xp?: number
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -73,7 +109,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      add_xp: { Args: { _amount: number; _user_id: string }; Returns: Json }
     }
     Enums: {
       [_ in never]: never
