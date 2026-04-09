@@ -39,9 +39,8 @@ Deno.serve(async (req) => {
       }),
     });
 
-    const rawText = await res.text();
-    console.log("API response status:", res.status, "body:", rawText.substring(0, 500));
-    const completion = JSON.parse(rawText);
+    const completion = await res.json();
+    let content = completion.choices?.[0]?.message?.content || "{}";
     let content = completion.choices?.[0]?.message?.content || "{}";
     content = content.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
     const parsed = JSON.parse(content);
