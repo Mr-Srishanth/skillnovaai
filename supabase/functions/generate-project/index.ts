@@ -40,9 +40,7 @@ Deno.serve(async (req) => {
     });
 
     const completion = await res.json();
-    let content = completion.choices?.[0]?.message?.content || "{}";
-    let content = completion.choices?.[0]?.message?.content || "{}";
-    content = content.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
+    const content = (completion.choices?.[0]?.message?.content || "{}").replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
     const parsed = JSON.parse(content);
 
     return new Response(JSON.stringify(parsed), { headers: { ...corsHeaders, "Content-Type": "application/json" } });

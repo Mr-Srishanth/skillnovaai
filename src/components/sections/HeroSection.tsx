@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import ParticleField from "../ParticleField";
 import { useAuth } from "@/contexts/AuthContext";
+import { ArrowRight, Zap, Brain, Target } from "lucide-react";
 
 const HeroSection = () => {
   const { user } = useAuth();
@@ -21,17 +22,11 @@ const HeroSection = () => {
         <span className="font-display font-bold text-sm gradient-text">SkillNova AI</span>
         <div className="flex gap-3">
           {user ? (
-            <Link
-              to="/dashboard"
-              className="text-sm px-4 py-2 rounded-lg bg-primary/15 text-primary hover:bg-primary/25 transition-colors font-medium"
-            >
+            <Link to="/dashboard" className="text-sm px-4 py-2 rounded-lg bg-primary/15 text-primary hover:bg-primary/25 transition-colors font-medium">
               Dashboard
             </Link>
           ) : (
-            <Link
-              to="/auth"
-              className="text-sm px-4 py-2 rounded-lg bg-primary/15 text-primary hover:bg-primary/25 transition-colors font-medium"
-            >
+            <Link to="/auth" className="text-sm px-4 py-2 rounded-lg bg-primary/15 text-primary hover:bg-primary/25 transition-colors font-medium">
               Sign In
             </Link>
           )}
@@ -41,56 +36,69 @@ const HeroSection = () => {
       <div className="relative z-10 w-full max-w-7xl mx-auto px-6 flex flex-col lg:flex-row items-center gap-12 lg:gap-16">
         {/* Left side — text */}
         <div className="flex-1 text-center lg:text-left">
-          <motion.p
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1, delay: 0.5 }}
-            className="text-lg md:text-2xl font-light text-muted-foreground mb-3"
-          >
-            Your career is not random.
-          </motion.p>
-          <motion.p
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1, delay: 1.5 }}
-            className="text-lg md:text-2xl font-light text-muted-foreground mb-8"
-          >
-            It's just <span className="text-neon-cyan font-medium">unoptimized</span>.
-          </motion.p>
-          <motion.h1
-            initial={{ opacity: 0, y: 30, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ duration: 1.2, delay: 2.5 }}
-            className="text-4xl md:text-6xl lg:text-7xl font-display font-black neon-glow-cyan mb-4"
-          >
-            SkillNova AI
-          </motion.h1>
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 1, delay: 3.2 }}
-            className="text-muted-foreground text-lg md:text-xl mb-8"
-          >
-            Your Personal Career OS
-          </motion.p>
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 3.8 }}
+            transition={{ duration: 0.6, delay: 0.4 }}
+            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full glass-card text-xs text-neon-cyan font-medium mb-6"
           >
-            <Link to={user ? "/dashboard" : "/auth"} className="neon-btn inline-block animate-neon-pulse">
-              Enter System →
+            <Zap className="w-3.5 h-3.5" />
+            AI-Powered Career Intelligence
+          </motion.div>
+
+          <motion.h1
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 1, delay: 0.6 }}
+            className="text-4xl md:text-5xl lg:text-6xl font-display font-black text-foreground mb-4 leading-tight"
+          >
+            Your Career.{" "}
+            <span className="gradient-text">Optimized by AI.</span>
+          </motion.h1>
+
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.9 }}
+            className="text-lg md:text-xl text-muted-foreground mb-8 max-w-lg mx-auto lg:mx-0"
+          >
+            Know your gaps. Fix your path. Get job-ready faster.
+          </motion.p>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 1.1 }}
+            className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start"
+          >
+            <Link to={user ? "/dashboard" : "/auth"} className="neon-btn inline-flex items-center justify-center gap-2 animate-neon-pulse">
+              Enter SkillNova <ArrowRight className="w-4 h-4" />
             </Link>
+          </motion.div>
+
+          {/* Trust indicators */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 1.5, duration: 0.8 }}
+            className="flex flex-wrap gap-6 mt-8 justify-center lg:justify-start text-xs text-muted-foreground"
+          >
+            {["10,000+ users", "70% faster growth", "AI-powered insights"].map((stat, i) => (
+              <span key={i} className="flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-neon-cyan" />
+                {stat}
+              </span>
+            ))}
           </motion.div>
         </div>
 
         {/* Right side — floating preview cards */}
-        <div className="flex-1 hidden lg:flex items-center justify-center relative h-[400px]">
+        <div className="flex-1 hidden lg:flex items-center justify-center relative h-[420px]">
           {/* Circular progress card */}
           <motion.div
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 2.8, duration: 0.8 }}
+            transition={{ delay: 1.0, duration: 0.8 }}
             className="absolute top-0 right-8 glass-card p-6 animate-float card-shine"
           >
             <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider mb-3">Readiness</p>
@@ -116,11 +124,14 @@ const HeroSection = () => {
           <motion.div
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 3.2, duration: 0.8 }}
-            className="absolute top-24 left-0 glass-card p-4 max-w-[200px] animate-float-delayed card-shine"
+            transition={{ delay: 1.3, duration: 0.8 }}
+            className="absolute top-24 left-0 glass-card p-4 max-w-[220px] animate-float-delayed card-shine"
           >
-            <p className="text-[10px] text-muted-foreground mb-2 font-medium">AI Mentor</p>
-            <div className="rounded-lg p-2 text-xs text-foreground/80" style={{ background: 'rgba(255,255,255,0.04)' }}>
+            <div className="flex items-center gap-2 mb-2">
+              <Brain className="w-3.5 h-3.5 text-neon-purple" />
+              <p className="text-[10px] text-muted-foreground font-medium">AI Mentor</p>
+            </div>
+            <div className="rounded-lg p-2.5 text-xs text-foreground/80" style={{ background: 'rgba(255,255,255,0.04)' }}>
               "Focus on system design next — it's your biggest gap."
             </div>
           </motion.div>
@@ -129,12 +140,15 @@ const HeroSection = () => {
           <motion.div
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 3.6, duration: 0.8 }}
-            className="absolute bottom-0 right-16 glass-card p-4 animate-float-slow card-shine"
+            transition={{ delay: 1.6, duration: 0.8 }}
+            className="absolute bottom-4 right-16 glass-card p-4 animate-float-slow card-shine"
           >
-            <p className="text-[10px] text-muted-foreground mb-1 font-medium uppercase tracking-wider">XP Today</p>
-            <p className="font-display font-black text-2xl gradient-text">+150</p>
-            <p className="text-[10px] text-green-400 mt-1">↑ Level Up: Pro</p>
+            <div className="flex items-center gap-2 mb-1">
+              <Target className="w-3.5 h-3.5 text-green-400" />
+              <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">Learner Rank</p>
+            </div>
+            <p className="font-display font-black text-lg gradient-text">Ahead of 68%</p>
+            <p className="text-[10px] text-green-400 mt-0.5">↑ Top Performer</p>
           </motion.div>
         </div>
       </div>
