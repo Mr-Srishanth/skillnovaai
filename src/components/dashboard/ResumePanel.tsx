@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Progress } from "@/components/ui/progress";
 import { validateRole } from "@/lib/validation";
-import { bumpLocalCount } from "@/hooks/useCareerProfile";
+import { bumpLocalCount, setLocalNumber } from "@/hooks/useCareerProfile";
 
 interface ATSResult {
   atsScore: number;
@@ -43,56 +43,83 @@ const ResumePanel = ({ userId }: { userId: string }) => {
   const [loading, setLoading] = useState(false);
   const [thinkingStep, setThinkingStep] = useState(0);
   const [result, setResult] = useState<ATSResult | null>(null);
+  const [pasteMode, setPasteMode] = useState(false);
+  const [pastedText, setPastedText] = useState("");
+  const [extractionNote, setExtractionNote] = useState("");
 
+  /** Real PDF parsing via pdf.js, with accurate diagnosis when it fails. */
   const extractText = async (pdfFile: File): Promise<string> => {
-    // Simple text extraction from PDF using browser
-    const arrayBuffer = await pdfFile.arrayBuffer();
-    const bytes = new Uint8Array(arrayBuffer);
-    let text = "";
-    
-    // Basic text extraction: decode readable ASCII/UTF-8 portions
-    const decoder = new TextDecoder("utf-8", { fatal: false });
-    const fullText = decoder.decode(bytes);
-    
-    // Extract text between BT/ET operators and parentheses
-    const textMatches = fullText.match(/\(([^)]+)\)/g);
-    if (textMatches) {
-      text = textMatches
-        .map((m) => m.slice(1, -1))
-        .filter((t) => t.length > 1 && /[a-zA-Z]/.test(t))
-        .join(" ");
-    }
-    
-    // Fallback: extract readable strings
-    if (text.length < 50) {
-      const readable = fullText.match(/[a-zA-Z0-9@.\-_,;:!? ]{4,}/g);
-      text = readable ? readable.join(" ") : "";
+    const buffer = await pdfFile.arrayBuffer();
+    const pdfjs: any = await import("pdfjs-dist");
+    const workerUrl = (await import("pdfjs-dist/build/pdf.worker.min.mjs?url")).default;
+    pdfjs.GlobalWorkerOptions.workerSrc = workerUrl;
+
+    let doc: any;
+    try {
+      doc = await pdfjs.getDocument({ data: buffer }).promise;
+    } catch (err: any) {
+      const name = err?.name || "";
+      if (name === "PasswordException") {
+        throw new Error("This PDF is password protected. Remove the password, or paste your resume text instead.");
+      }
+      if (name === "InvalidPDFException") {
+        throw new Error("This file isn't a readable PDF — it may be damaged. Re-export it from your editor, or paste your resume text.");
+      }
+      throw new Error("We couldn't open this PDF. Try re-exporting it, or paste your resume text instead.");
     }
 
-    return text.slice(0, 5000);
+    const maxPages = Math.min(doc.numPages, 10);
+    let text = "";
+    let imageOnlyPages = 0;
+
+    for (let i = 1; i <= maxPages; i++) {
+      const page = await doc.getPage(i);
+      const content = await page.getTextContent();
+      const pageText = content.items.map((it: any) => it.str).join(" ").trim();
+      if (pageText.replace(/\s/g, "").length < 20) imageOnlyPages++;
+      text += pageText + "\n";
+    }
+
+    const clean = text.replace(/\s+/g, " ").trim();
+
+    if (clean.length < 50) {
+      if (imageOnlyPages === maxPages) {
+        throw new Error("This looks like a scanned or image-only PDF — there's no selectable text to read. Paste your resume text below and we'll analyse it instantly.");
+      }
+      throw new Error("We could only read a few characters from this PDF (it may be metadata-only). Paste your resume text below instead.");
+    }
+
+    setExtractionNote(`Read ${clean.length.toLocaleString()} characters across ${maxPages} page${maxPages > 1 ? "s" : ""}.`);
+    return clean.slice(0, 8000);
   };
 
   const handleAnalyze = async () => {
-    if (!file) { toast.error("Please upload a resume PDF"); return; }
     const rv = validateRole(targetRole);
     setRoleError(rv.valid ? "" : rv.error || "");
     if (!rv.valid) return;
 
+    if (pasteMode) {
+      if (pastedText.trim().length < 200) {
+        toast.error("Paste at least a few hundred characters of your resume.");
+        return;
+      }
+    } else if (!file) {
+      toast.error("Please upload a resume PDF");
+      return;
+    }
+
     setLoading(true);
     setResult(null);
     setThinkingStep(0);
+    setExtractionNote("");
 
     const stepInterval = setInterval(() => {
       setThinkingStep((s) => Math.min(s + 1, THINKING_STEPS.length - 1));
     }, 2000);
 
     try {
-      const resumeText = await extractText(file);
-      
-      if (resumeText.length < 50) {
-        toast.error("Could not extract enough text from this PDF. Try a text-based PDF (not scanned image).");
-        return;
-      }
+      const resumeText = pasteMode ? pastedText.trim().slice(0, 8000) : await extractText(file!);
+
 
       const { data: { session } } = await supabase.auth.getSession();
 
@@ -114,6 +141,7 @@ const ResumePanel = ({ userId }: { userId: string }) => {
       if (data.error) throw new Error(data.error);
       setResult(data);
       bumpLocalCount(userId, "resumes");
+      if (typeof data.atsScore === "number") setLocalNumber(userId, "resumeScore", data.atsScore);
       toast.success("Resume analysis complete!");
     } catch (e: any) {
       console.error(e);
@@ -134,36 +162,75 @@ const ResumePanel = ({ userId }: { userId: string }) => {
       </p>
 
       <div className="glass-card p-8 box-glow-purple space-y-6 mb-8">
-        {/* File upload */}
-        <div>
-          <label className="block text-sm text-muted-foreground mb-1.5 font-medium">Upload Resume (PDF)</label>
-          <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-border rounded-xl cursor-pointer hover:border-primary/50 transition-colors bg-muted/20">
-            <div className="text-center">
-              <span className="text-3xl">📄</span>
-              <p className="text-sm text-muted-foreground mt-2">
-                {file ? file.name : "Click to upload PDF"}
-              </p>
-              {file && <p className="text-xs text-muted-foreground/50">{(file.size / 1024).toFixed(0)} KB</p>}
-            </div>
-            <input
-              type="file"
-              accept=".pdf"
-              className="hidden"
-              onChange={(e) => {
-                const f = e.target.files?.[0];
-                if (f && f.type === "application/pdf") {
-                  if (f.size > 5 * 1024 * 1024) {
-                    toast.error("File too large. Max 5MB.");
-                  } else {
-                    setFile(f);
-                  }
-                } else {
-                  toast.error("Please upload a PDF file");
-                }
-              }}
-            />
-          </label>
+        {/* Source toggle */}
+        <div className="flex gap-2">
+          {[
+            { key: false, label: "Upload PDF" },
+            { key: true, label: "Paste text" },
+          ].map((opt) => (
+            <button
+              key={String(opt.key)}
+              onClick={() => setPasteMode(opt.key)}
+              className={`px-4 py-2 rounded-lg text-xs font-display font-bold border transition-colors ${
+                pasteMode === opt.key
+                  ? "border-primary/50 bg-primary/10 text-primary"
+                  : "border-border text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {opt.label}
+            </button>
+          ))}
         </div>
+
+        {!pasteMode ? (
+          <div>
+            <label className="block text-sm text-muted-foreground mb-1.5 font-medium">Upload Resume (PDF)</label>
+            <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-border rounded-xl cursor-pointer hover:border-primary/50 transition-colors bg-muted/20">
+              <div className="text-center">
+                <span className="text-3xl">📄</span>
+                <p className="text-sm text-muted-foreground mt-2">
+                  {file ? file.name : "Click to upload PDF"}
+                </p>
+                {file && <p className="text-xs text-muted-foreground/50">{(file.size / 1024).toFixed(0)} KB</p>}
+              </div>
+              <input
+                type="file"
+                accept=".pdf"
+                className="hidden"
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  setExtractionNote("");
+                  if (f && f.type === "application/pdf") {
+                    if (f.size > 5 * 1024 * 1024) {
+                      toast.error("File too large. Max 5MB.");
+                    } else {
+                      setFile(f);
+                    }
+                  } else {
+                    toast.error("Please upload a PDF file");
+                  }
+                }}
+              />
+            </label>
+            <p className="text-[11px] text-muted-foreground mt-2">
+              Text-based PDFs are read directly. Scanned or password-protected files can be pasted as text instead.
+            </p>
+            {extractionNote && <p className="text-[11px] text-green-400 mt-1">{extractionNote}</p>}
+          </div>
+        ) : (
+          <div>
+            <label className="block text-sm text-muted-foreground mb-1.5 font-medium">Paste your resume text</label>
+            <textarea
+              value={pastedText}
+              onChange={(e) => setPastedText(e.target.value)}
+              rows={10}
+              placeholder="Paste the full text of your resume here..."
+              className="w-full bg-muted/50 border border-border rounded-lg px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all resize-y"
+            />
+            <p className="text-[11px] text-muted-foreground mt-1">{pastedText.trim().length.toLocaleString()} characters</p>
+          </div>
+        )}
+
 
         {/* Target role */}
         <div>
@@ -186,7 +253,7 @@ const ResumePanel = ({ userId }: { userId: string }) => {
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           onClick={handleAnalyze}
-          disabled={loading || !file}
+          disabled={loading || (pasteMode ? pastedText.trim().length < 200 : !file)}
           className="w-full py-3.5 rounded-lg font-display font-bold bg-gradient-to-r from-accent to-primary text-primary-foreground disabled:opacity-40 transition-all"
         >
           {loading ? "Analyzing..." : "Analyze Resume"}

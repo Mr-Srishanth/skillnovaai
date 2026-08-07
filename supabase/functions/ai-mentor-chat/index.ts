@@ -25,31 +25,39 @@ serve(async (req) => {
       ? `\n\nUSER CONTEXT (always use this — never ask for information already listed here):
 - Career Goal: ${userContext.goal || "Not specified"}
 - Current Skills: ${userContext.skills || "Not specified"}
-- Latest Readiness Score: ${userContext.score ?? "No analysis yet"}
+- CAREER READINESS (authoritative platform value — always quote this exact number): ${userContext.readiness?.overall ?? "not computed"}%
+- Readiness dimensions: ${(userContext.readiness?.dimensions || []).map((d: any) => `${d.name} ${d.score}`).join(", ") || "n/a"}
 - Known Skill Gaps: ${(userContext.missingSkills || []).join(", ") || "none recorded"}
 - Roadmap Milestones Completed: ${(userContext.completedMilestones || []).join(", ") || "none yet"}
-- Analyses Run: ${userContext.analysesCount ?? 0} | Projects: ${userContext.projectsCount ?? 0} | Mock Interviews: ${userContext.interviewsCount ?? 0} | Resume Analyzed: ${userContext.resumeAnalyzed ? "yes" : "no"}
+- Knowledge packs: ${userContext.knowledgePacks ?? 0} (mastered ${userContext.knowledgeMastered ?? 0})
+- Projects: ${userContext.projectsCount ?? 0} | Mock Interviews: ${userContext.interviewsCount ?? 0} | Resume ATS score: ${userContext.resumeScore ?? "not analysed"}
+- Daily study hours: ${userContext.studyHours ?? 2}
 - Streak: ${userContext.streak ?? 0} days | XP: ${userContext.xp ?? 0} (${userContext.level || "Beginner"})
-- Region: ${userContext.region || "India"}`
+- Region: ${userContext.region || "India"} (use local currency: India → ₹ LPA)`
       : "";
 
 
-    const systemPrompt = `You are SkillNova AI — an expert career mentor and AI advisor. You provide personalized, actionable career guidance.
+    const systemPrompt = `You are SkillNova AI — an expert career mentor. You answer as a structured coaching card, never as an essay.
 
-PERSONALITY:
-- Confident, clear, and encouraging
-- You remember the user's context and reference it naturally
-- You provide specific, practical advice — never generic filler
-- You use structured formatting with bullet points, headers, and bold text
-- You anticipate follow-up questions
+RESPONSE FORMAT (markdown, use only the sections that are relevant to the question, in this order):
+**Summary** — 1 short line.
+**Readiness** — the exact readiness % from context, plus 4-8 words of meaning.
+**Strengths** — max 3 bullets, ≤12 words each.
+**Gaps** — max 3 bullets, ≤12 words each.
+**Today's Mission** — 1 concrete task doable today.
+**Recommended Project** — 1 named project idea.
+**Recommended Course** — 1 named course/resource.
+**Expected Improvement** — e.g. "+6% readiness in 2 weeks".
+**Next Action** — 1 line.
+**Estimated Time** — e.g. "3 hours".
 
-BEHAVIOR RULES:
-- Always reference the user's specific skills and goals when relevant
-- If the user hasn't shared context, ask about their career goal and skills first
-- Give concrete next steps, not vague suggestions
-- Use career industry knowledge to provide real insights
-- If unsure about something, say so honestly
-- Keep responses focused and under 400 words unless deep analysis is needed${contextBlock}`;
+HARD RULES:
+- Total response under 180 words unless the user explicitly asks to "explain in detail" or "go deeper".
+- Bullets only. Never write a paragraph longer than 2 lines.
+- Never invent a readiness number — reuse the one in context.
+- Every recommendation must reference the user's actual goal, skills or gaps.
+- If context is missing (no goal/skills), ask exactly one short question instead of guessing.${contextBlock}`;
+
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",

@@ -47,31 +47,30 @@ const SCHEMAS: Record<Mode, any> = {
   },
   readiness: {
     name: "career_readiness",
-    description: "Multi-dimensional career readiness breakdown",
+    description: "Narrative layer on top of the deterministic readiness scores supplied in the profile",
     parameters: {
       type: "object",
       properties: {
-        overall: { type: "number", description: "0-100 overall career readiness" },
-        verdict: { type: "string", description: "One punchy sentence describing where the user stands" },
+        verdict: { type: "string", description: "One punchy sentence describing where the user stands, consistent with the supplied overall score" },
         dimensions: {
           type: "array",
-          description: "Exactly 6 dimensions: Skills, Projects, Resume, Interview, Learning Consistency, Confidence",
+          description: "Exactly 6 dimensions, same names and order as the supplied scores",
           items: {
             type: "object",
             properties: {
-              name: { type: "string", enum: ["Skills", "Projects", "Resume", "Interview", "Learning Consistency", "Confidence"] },
-              score: { type: "number", description: "0-100" },
-              insight: { type: "string", description: "1-2 sentences explaining the score using the user's actual profile" },
+              name: { type: "string", enum: ["Skills", "Projects", "Knowledge", "Resume", "Interview", "Consistency"] },
+              insight: { type: "string", description: "1-2 sentences explaining the supplied score using the user's actual profile" },
               action: { type: "string", description: "The single next action to raise this score" },
             },
-            required: ["name", "score", "insight", "action"],
+            required: ["name", "insight", "action"],
           },
         },
-        strongest: { type: "string" },
-        weakest: { type: "string" },
+        strongest: { type: "string", description: "1 sentence about the supplied strongest dimension" },
+        weakest: { type: "string", description: "1 sentence about the supplied weakest dimension" },
       },
-      required: ["overall", "verdict", "dimensions", "strongest", "weakest"],
+      required: ["verdict", "dimensions", "strongest", "weakest"],
     },
+
   },
   company: {
     name: "company_readiness",
@@ -229,21 +228,40 @@ const SCHEMAS: Record<Mode, any> = {
   },
 };
 
+const CURRENCY_RULE: Record<string, string> = {
+  India: "Report ALL money in Indian Rupees using LPA format, e.g. '₹4–7 LPA'. Never use dollars.",
+  "United States": "Report all money in USD per year, e.g. '$70K–$95K'.",
+  "United Kingdom": "Report all money in GBP per year, e.g. '£38K–£55K'.",
+  Europe: "Report all money in EUR per year, e.g. '€45K–€65K'.",
+  Remote: "Report all money in USD per year, e.g. '$70K–$95K'.",
+};
+
 function buildUserMessage(mode: Mode, profile: any, payload: any) {
   const p = profile || {};
+  const r = p.readiness || {};
+  const dims = Array.isArray(r.dimensions)
+    ? r.dimensions.map((d: any) => `${d.name}: ${d.score}/100`).join(", ")
+    : "not computed";
+  const region = p.region || "India";
+
   const base = `USER CAREER PROFILE
 - Career goal / target role: ${p.goal || "Not specified"}
 - Current skills: ${p.skills || "Not specified"}
-- Latest readiness score: ${p.score ?? "no analysis yet"}
+- Latest skill-gap analysis score: ${p.score ?? "no analysis yet"}
+- COMPUTED CAREER READINESS (authoritative, do not contradict): ${r.overall ?? "unknown"}/100
+- Readiness dimension scores (authoritative): ${dims}
 - Missing skills identified earlier: ${(p.missingSkills || []).join(", ") || "none recorded"}
 - Completed roadmap milestones: ${(p.completedMilestones || []).join(", ") || "none yet"}
 - Projects completed: ${p.projectsCount ?? 0}
-- Resume analyzed: ${p.resumeAnalyzed ? "yes" : "no"}
-- Mock interviews taken: ${p.interviewsCount ?? 0}
+- Knowledge packs studied: ${p.knowledgePacks ?? 0} (mastered: ${p.knowledgeMastered ?? 0}, avg quiz: ${p.avgQuizScore ?? "n/a"})
+- Resume ATS score: ${p.resumeScore ?? "not analysed"}
+- Mock interviews taken: ${p.interviewsCount ?? 0} (best score: ${p.interviewScore ?? "n/a"})
+- Daily study hours: ${p.studyHours ?? 2}
 - Total analyses run: ${p.analysesCount ?? 0}
 - Activity streak (days): ${p.streak ?? 0}
 - XP / level: ${p.xp ?? 0} / ${p.level || "Beginner"}
-- Region: ${p.region || "India"}
+- Region: ${region}
+- CURRENCY RULE: ${CURRENCY_RULE[region] || CURRENCY_RULE.India}
 `;
 
   switch (mode) {
@@ -251,10 +269,15 @@ function buildUserMessage(mode: Mode, profile: any, payload: any) {
       return `${base}\nGenerate company readiness for these companies: ${(payload?.companies || []).join(", ")}. Judge against each company's real hiring bar for the target role.`;
     case "roadmap":
       return `${base}\nBuild the living 8-milestone roadmap for this exact user. Skip or shorten stages they already cover; go deeper where they are weak.`;
+    case "readiness":
+      return `${base}\nThe scores above are already computed by the platform engine. Do NOT invent new scores. Write the verdict, and for each of the 6 dimensions write an insight that explains its exact supplied score plus one next action.`;
+    case "salary":
+      return `${base}\nEstimate salary strictly following the CURRENCY RULE above. Ground the numbers in this user's actual skills, projects and readiness.`;
     default:
       return `${base}\nProduce the analysis for this exact user.`;
   }
 }
+
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
