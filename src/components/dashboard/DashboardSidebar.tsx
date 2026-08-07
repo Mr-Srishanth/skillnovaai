@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import {
   Home, Brain, Bot, FileText, Telescope, Clock, GitCompare,
-  Mic, Code2, Menu, X, LogOut, ArrowLeft,
+  Mic, Code2, Menu, X, LogOut, ArrowLeft, BookOpen,
   Route, Gauge, Lightbulb, Building2, Banknote, TrendingUp
 } from "lucide-react";
 import { useState } from "react";
@@ -23,6 +23,7 @@ const groups: { label: string; items: { id: DashboardTab; label: string; icon: t
       { id: "overview", label: "Overview", icon: Home },
       { id: "analyze", label: "Analyze", icon: Brain },
       { id: "roadmap", label: "Roadmap", icon: Route },
+      { id: "knowledge", label: "Knowledge", icon: BookOpen },
     ],
   },
   {
