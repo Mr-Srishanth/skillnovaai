@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Mic, Send, RefreshCw, AlertCircle, CheckCircle, Info } from "lucide-react";
-import { bumpLocalCount } from "@/hooks/useCareerProfile";
+import { bumpLocalCount, localNumber, setLocalNumber } from "@/hooks/useCareerProfile";
 
 interface Props {
   userId: string;
@@ -90,6 +90,12 @@ const InterviewPanel = ({ userId }: Props) => {
       // Award XP
       await supabase.rpc("add_xp" as any, { _user_id: userId, _amount: 20 });
       bumpLocalCount(userId, "interviews");
+      const attemptScore = Math.round(((data?.confidence_score ?? 0) + (data?.clarity_score ?? 0)) / 2);
+      if (attemptScore > 0) {
+        const prev = localNumber(userId, "interviewScore");
+        // rolling average so one strong or weak answer doesn't swing readiness
+        setLocalNumber(userId, "interviewScore", prev == null ? attemptScore : Math.round(prev * 0.6 + attemptScore * 0.4));
+      }
       toast.success("You gained +20 XP! 🎯");
     } catch (e: any) {
       toast.error(e.message || "Failed to analyze answer");

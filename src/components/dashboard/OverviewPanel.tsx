@@ -2,6 +2,9 @@ import { useEffect, useState, useRef } from "react";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { TrendingUp, Target, BarChart3, Lightbulb } from "lucide-react";
+import { useCareerProfile } from "@/hooks/useCareerProfile";
+import { readinessVerdict } from "@/lib/careerEngine";
+
 
 interface Props {
   userId: string;
@@ -67,6 +70,8 @@ const CircularProgress = ({ value, size = 120 }: { value: number; size?: number 
 const OverviewPanel = ({ userId, displayName }: Props) => {
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const { profile } = useCareerProfile(userId);
+
 
   useEffect(() => {
     supabase
@@ -87,7 +92,7 @@ const OverviewPanel = ({ userId, displayName }: Props) => {
   const totalAnalyses = history.length;
   const uniqueRoles = new Set(history.map((h) => h.target_role)).size;
 
-  const animatedScore = useCountUp(latestScore ?? 0);
+  const readiness = profile.readiness;
   const animatedTotal = useCountUp(totalAnalyses);
   const animatedRoles = useCountUp(uniqueRoles);
 
@@ -95,12 +100,11 @@ const OverviewPanel = ({ userId, displayName }: Props) => {
   const nextStep = latest?.missing_skills && Array.isArray(latest.missing_skills) && latest.missing_skills.length > 0
     ? (typeof latest.missing_skills[0] === "string" ? latest.missing_skills[0] : (latest.missing_skills[0]?.skill ?? null)) : null;
 
-  const greeting = latestScore != null ? "Welcome back" : "Welcome";
-  const motivational = latestScore != null
-    ? latestScore < 40 ? "Every expert was once a beginner. Let's build your path."
-      : latestScore < 70 ? "You're making solid progress. Keep pushing forward."
-      : "You're ahead of 78% of learners. Time to specialize."
+  const greeting = readiness.hasData ? "Welcome back" : "Welcome";
+  const motivational = readiness.hasData
+    ? readinessVerdict(readiness.overall)
     : "Start your first analysis to unlock insights.";
+
 
   if (loading) {
     return (
@@ -131,12 +135,16 @@ const OverviewPanel = ({ userId, displayName }: Props) => {
             <Target className="w-4 h-4 text-neon-cyan" />
             <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">Readiness</p>
           </div>
-          <CircularProgress value={latestScore ?? 0} />
+          <CircularProgress key={readiness.overall} value={readiness.overall} />
+          <p className="text-[10px] text-muted-foreground mt-3">
+            Strongest: {readiness.strongest.name} · Weakest: {readiness.weakest.name}
+          </p>
           {scoreDelta != null && (
-            <p className={`text-xs mt-3 font-medium ${scoreDelta >= 0 ? "text-green-400" : "text-destructive"}`}>
-              {scoreDelta >= 0 ? "↑" : "↓"} {Math.abs(scoreDelta)}% from last
+            <p className={`text-xs mt-1 font-medium ${scoreDelta >= 0 ? "text-green-400" : "text-destructive"}`}>
+              {scoreDelta >= 0 ? "↑" : "↓"} {Math.abs(scoreDelta)}% skill score vs last analysis
             </p>
           )}
+
         </motion.div>
 
         <motion.div

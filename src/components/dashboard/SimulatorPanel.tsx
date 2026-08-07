@@ -1,32 +1,43 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { validateSkills, validateRole } from "@/lib/validation";
 import { Progress } from "@/components/ui/progress";
+import { useCareerProfile, setLocalNumber } from "@/hooks/useCareerProfile";
+import { buildForecast, type ForecastPoint } from "@/lib/careerEngine";
 
-interface SimResult {
-  currentReadiness: number;
-  milestones: {
-    period: string;
-    readiness: number;
-    skillsGained: string[];
-    milestone: string;
-    jobReady: boolean;
-  }[];
+interface SimNarrative {
+  milestones: { period: string; skillsGained: string[]; milestone: string }[];
   salaryRange: { entry: string; mid: string; senior: string };
   insight: string;
   recommendation: string;
 }
 
 const SimulatorPanel = ({ userId }: { userId: string }) => {
+  const { profile, loading: profileLoading } = useCareerProfile(userId);
   const [skills, setSkills] = useState("");
   const [role, setRole] = useState("");
   const [hours, setHours] = useState("2");
   const [skillsError, setSkillsError] = useState("");
   const [roleError, setRoleError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<SimResult | null>(null);
+  const [narrative, setNarrative] = useState<SimNarrative | null>(null);
+  const [forecast, setForecast] = useState<ForecastPoint[] | null>(null);
+
+  useEffect(() => {
+    if (profileLoading) return;
+    setSkills((s) => s || profile.skills);
+    setRole((r) => r || profile.goal);
+    setHours((h) => (h === "2" ? String(profile.studyHours) : h));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profileLoading, profile.skills, profile.goal, profile.studyHours]);
+
+  const current = profile.readiness.overall;
+  const consistency = profile.readiness.dimensions.find((d) => d.name === "Consistency")?.score ?? 50;
+
+  // Live preview — updates instantly as the slider moves, no AI call needed.
+  const livePreview = buildForecast(current, Number(hours) || 2, consistency);
 
   const handleSimulate = async () => {
     const sv = validateSkills(skills);
@@ -38,18 +49,35 @@ const SimulatorPanel = ({ userId }: { userId: string }) => {
     const h = Number(hours);
     if (!h || h < 0.5 || h > 16) { toast.error("Study hours must be between 0.5 and 16"); return; }
 
+    setLocalNumber(userId, "studyHours", h);
+    const points = buildForecast(current, h, consistency);
+    setForecast(points);
     setLoading(true);
-    setResult(null);
+    setNarrative(null);
 
     try {
       const { data, error } = await supabase.functions.invoke("simulate-career", {
-        body: { skills, targetRole: role, studyHoursPerDay: h },
+        body: {
+          skills,
+          targetRole: role,
+          studyHoursPerDay: h,
+          region: profile.region,
+          currentReadiness: current,
+          forecast: points,
+          signals: {
+            projectsCount: profile.projectsCount,
+            knowledgePacks: profile.knowledgePacks,
+            resumeScore: profile.resumeScore,
+            interviewScore: profile.interviewScore,
+            streak: profile.streak,
+          },
+        },
       });
 
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
 
-      setResult(data);
+      setNarrative(data);
       toast.success("Simulation complete!");
     } catch (e: any) {
       console.error(e);
@@ -58,6 +86,9 @@ const SimulatorPanel = ({ userId }: { userId: string }) => {
       setLoading(false);
     }
   };
+
+  const points = forecast || livePreview;
+  const tone = (v: number) => (v < 40 ? "text-destructive" : v < 70 ? "text-yellow-400" : "text-green-400");
 
   return (
     <div className="max-w-4xl">
@@ -113,6 +144,10 @@ const SimulatorPanel = ({ userId }: { userId: string }) => {
             <span>5h</span>
             <span>10h</span>
           </div>
+          <p className="text-xs text-muted-foreground mt-3">
+            At {hours}h/day you reach{" "}
+            <span className={tone(livePreview[1].readiness)}>{livePreview[1].readiness}%</span> readiness in 6 months.
+          </p>
         </div>
 
         <motion.button
@@ -126,45 +161,28 @@ const SimulatorPanel = ({ userId }: { userId: string }) => {
         </motion.button>
       </div>
 
-      {/* Loading */}
-      <AnimatePresence>
-        {loading && (
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="glass-card p-6 mb-8 text-center space-y-4">
-            <div className="flex justify-center gap-2">
-              {[0, 1, 2].map((i) => (
-                <motion.div key={i} animate={{ scale: [1, 1.4, 1], opacity: [0.4, 1, 0.4] }} transition={{ duration: 1.5, repeat: Infinity, delay: i * 0.3 }} className="w-3 h-3 rounded-full bg-primary" />
-              ))}
-            </div>
-            <p className="text-sm text-muted-foreground font-medium animate-pulse">Predicting your future trajectory...</p>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <div className="space-y-6">
+        {/* Current readiness — shared engine value */}
+        <div className="glass-card p-8 box-glow-blue text-center">
+          <p className="text-sm text-muted-foreground mb-2 font-medium uppercase tracking-wider">Current Readiness</p>
+          <div className={`text-5xl font-display font-black ${tone(current)}`}>{current}%</div>
+          <Progress value={current} className="h-2 max-w-xs mx-auto mt-4" />
+          <p className="text-xs text-muted-foreground mt-3">Same value used across every SkillNova module.</p>
+        </div>
 
-      {/* Results */}
-      {result && (
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
-          {/* Current readiness */}
-          <div className="glass-card p-8 box-glow-blue text-center">
-            <p className="text-sm text-muted-foreground mb-2 font-medium uppercase tracking-wider">Current Readiness</p>
-            <div className={`text-5xl font-display font-black ${
-              result.currentReadiness < 40 ? "text-destructive" : result.currentReadiness < 70 ? "text-yellow-400" : "text-green-400"
-            }`}>
-              {result.currentReadiness}%
-            </div>
-            <Progress value={result.currentReadiness} className="h-2 max-w-xs mx-auto mt-4" />
-          </div>
-
-          {/* Timeline milestones */}
-          <div className="glass-card p-6 box-glow-purple">
-            <h4 className="text-lg font-display font-bold gradient-text mb-6">Growth Timeline</h4>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {result.milestones.map((m, i) => (
+        {/* Timeline */}
+        <div className="glass-card p-6 box-glow-purple">
+          <h4 className="text-lg font-display font-bold gradient-text mb-6">Growth Timeline</h4>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {points.map((m, i) => {
+              const text = narrative?.milestones.find((x) => x.period === m.period);
+              return (
                 <motion.div
-                  key={i}
+                  key={m.period}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.15 }}
-                  className={`glass-card p-5 relative overflow-hidden ${m.jobReady ? "border-green-500/40" : ""}`}
+                  className={`glass-card p-5 relative overflow-hidden min-h-[190px] ${m.jobReady ? "border-green-500/40" : ""}`}
                 >
                   {m.jobReady && (
                     <div className="absolute top-2 right-2 text-[10px] px-2 py-0.5 rounded-full bg-green-500/20 text-green-400 border border-green-500/30 font-medium">
@@ -172,57 +190,77 @@ const SimulatorPanel = ({ userId }: { userId: string }) => {
                     </div>
                   )}
                   <div className="text-xs text-muted-foreground font-medium uppercase tracking-wider mb-2">{m.period}</div>
-                  <div className={`text-3xl font-display font-black mb-3 ${
-                    m.readiness < 40 ? "text-destructive" : m.readiness < 70 ? "text-yellow-400" : "text-green-400"
-                  }`}>
-                    {m.readiness}%
-                  </div>
+                  <div className={`text-3xl font-display font-black mb-1 ${tone(m.readiness)}`}>{m.readiness}%</div>
+                  <p className="text-[11px] text-primary mb-3">+{Math.round(m.gain)}% vs today</p>
                   <Progress value={m.readiness} className="h-1.5 mb-3" />
-                  <p className="text-xs text-foreground/80 font-medium mb-2">{m.milestone}</p>
-                  <div className="flex flex-wrap gap-1">
-                    {m.skillsGained.map((s, j) => (
-                      <span key={j} className="text-[10px] px-2 py-0.5 rounded-full bg-primary/15 text-primary border border-primary/20">
-                        {s}
-                      </span>
-                    ))}
-                  </div>
+                  {text ? (
+                    <>
+                      <p className="text-xs text-foreground/80 font-medium mb-2">{text.milestone}</p>
+                      <div className="flex flex-wrap gap-1">
+                        {text.skillsGained.map((s, j) => (
+                          <span key={j} className="text-[10px] px-2 py-0.5 rounded-full bg-primary/15 text-primary border border-primary/20">
+                            {s}
+                          </span>
+                        ))}
+                      </div>
+                    </>
+                  ) : (
+                    <p className="text-xs text-muted-foreground">
+                      {loading ? "Writing this checkpoint..." : "Run the simulation for a detailed checkpoint plan."}
+                    </p>
+                  )}
                 </motion.div>
-              ))}
+              );
+            })}
+          </div>
+        </div>
+
+        <AnimatePresence>
+          {loading && (
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="glass-card p-6 text-center space-y-4">
+              <div className="flex justify-center gap-2">
+                {[0, 1, 2].map((i) => (
+                  <motion.div key={i} animate={{ scale: [1, 1.4, 1], opacity: [0.4, 1, 0.4] }} transition={{ duration: 1.5, repeat: Infinity, delay: i * 0.3 }} className="w-3 h-3 rounded-full bg-primary" />
+                ))}
+              </div>
+              <p className="text-sm text-muted-foreground font-medium animate-pulse">Mapping your trajectory...</p>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {narrative && (
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+            <div className="glass-card p-6 box-glow-blue">
+              <h4 className="text-lg font-display font-bold gradient-text mb-4">💰 Salary Trajectory</h4>
+              <div className="grid grid-cols-3 gap-4 text-center">
+                {(["entry", "mid", "senior"] as const).map((level, i) => (
+                  <motion.div key={level} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.1 }} className="p-4 rounded-xl bg-muted/30 border border-border/50">
+                    <div className="text-xs text-muted-foreground uppercase tracking-wider mb-1">
+                      {level === "entry" ? "Entry Level" : level === "mid" ? "Mid Level" : "Senior"}
+                    </div>
+                    <div className="text-lg font-display font-bold text-foreground">{narrative.salaryRange[level]}</div>
+                  </motion.div>
+                ))}
+              </div>
+              <p className="text-[11px] text-muted-foreground mt-3 text-center">Localised for {profile.region}</p>
             </div>
-          </div>
 
-          {/* Salary */}
-          <div className="glass-card p-6 box-glow-blue">
-            <h4 className="text-lg font-display font-bold gradient-text mb-4">💰 Salary Trajectory</h4>
-            <div className="grid grid-cols-3 gap-4 text-center">
-              {(["entry", "mid", "senior"] as const).map((level, i) => (
-                <motion.div key={level} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.1 }} className="p-4 rounded-xl bg-muted/30 border border-border/50">
-                  <div className="text-xs text-muted-foreground uppercase tracking-wider mb-1">
-                    {level === "entry" ? "Entry Level" : level === "mid" ? "Mid Level" : "Senior"}
-                  </div>
-                  <div className="text-lg font-display font-bold text-foreground">{result.salaryRange[level]}</div>
-                </motion.div>
-              ))}
+            <div className="glass-card p-6 box-glow-purple">
+              <h4 className="text-sm font-display font-bold gradient-text mb-3 flex items-center gap-2">
+                <span>🧠</span> AI Insight
+              </h4>
+              <p className="text-sm text-foreground/90 leading-relaxed">{narrative.insight}</p>
             </div>
-          </div>
 
-          {/* Insight */}
-          <div className="glass-card p-6 box-glow-purple">
-            <h4 className="text-sm font-display font-bold gradient-text mb-3 flex items-center gap-2">
-              <span>🧠</span> AI Insight
-            </h4>
-            <p className="text-sm text-foreground/90 leading-relaxed">{result.insight}</p>
-          </div>
-
-          {/* Recommendation */}
-          <div className="glass-card p-6 border-primary/40 box-glow-blue">
-            <h4 className="text-sm font-display font-bold text-primary mb-2 flex items-center gap-2">
-              <span>🚀</span> Recommendation
-            </h4>
-            <p className="text-foreground font-medium">{result.recommendation}</p>
-          </div>
-        </motion.div>
-      )}
+            <div className="glass-card p-6 border-primary/40 box-glow-blue">
+              <h4 className="text-sm font-display font-bold text-primary mb-2 flex items-center gap-2">
+                <span>🚀</span> Recommendation
+              </h4>
+              <p className="text-sm text-foreground/90 leading-relaxed">{narrative.recommendation}</p>
+            </div>
+          </motion.div>
+        )}
+      </div>
     </div>
   );
 };
