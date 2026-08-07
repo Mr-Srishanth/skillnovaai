@@ -22,11 +22,12 @@ import CompanyReadinessPanel from "@/components/dashboard/CompanyReadinessPanel"
 import SalaryInsightsPanel from "@/components/dashboard/SalaryInsightsPanel";
 import TrendsPanel from "@/components/dashboard/TrendsPanel";
 import InsightsPanel from "@/components/dashboard/InsightsPanel";
+import KnowledgePanel from "@/components/dashboard/KnowledgePanel";
 import { useCareerProfile } from "@/hooks/useCareerProfile";
 
 export type DashboardTab =
   | "overview" | "analyze" | "roadmap" | "readiness" | "insights"
-  | "companies" | "salary" | "trends"
+  | "companies" | "salary" | "trends" | "knowledge"
   | "mentor" | "resume" | "simulator" | "history" | "compare" | "interview" | "projects";
 
 const Dashboard = () => {
@@ -90,6 +91,7 @@ const Dashboard = () => {
             {activeTab === "overview" && <OverviewPanel userId={user.id} displayName={displayName} />}
             {activeTab === "analyze" && <AnalyzePanel userId={user.id} />}
             {activeTab === "roadmap" && <RoadmapPanel userId={user.id} />}
+            {activeTab === "knowledge" && <KnowledgePanel userId={user.id} />}
             {activeTab === "readiness" && <ReadinessPanel userId={user.id} />}
             {activeTab === "insights" && <InsightsPanel userId={user.id} />}
             {activeTab === "companies" && <CompanyReadinessPanel userId={user.id} />}
