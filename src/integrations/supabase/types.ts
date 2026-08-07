@@ -86,6 +86,57 @@ export type Database = {
         }
         Relationships: []
       }
+      knowledge_items: {
+        Row: {
+          created_at: string
+          id: string
+          mastered: boolean
+          note_style: string
+          output: Json
+          quiz_score: number | null
+          reading_minutes: number | null
+          search_text: string | null
+          source_ref: string | null
+          source_type: string
+          title: string
+          topic: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          mastered?: boolean
+          note_style?: string
+          output?: Json
+          quiz_score?: number | null
+          reading_minutes?: number | null
+          search_text?: string | null
+          source_ref?: string | null
+          source_type?: string
+          title: string
+          topic?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          mastered?: boolean
+          note_style?: string
+          output?: Json
+          quiz_score?: number | null
+          reading_minutes?: number | null
+          search_text?: string | null
+          source_ref?: string | null
+          source_type?: string
+          title?: string
+          topic?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
