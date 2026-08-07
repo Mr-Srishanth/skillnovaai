@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Code2, RefreshCw, ChevronDown, ChevronUp, Layers, Clock, Gauge, Sparkles } from "lucide-react";
 import { getRandomProject, type ProjectIdea } from "@/data/projectDataset";
+import { bumpLocalCount } from "@/hooks/useCareerProfile";
 
 interface Props {
   userId: string;
@@ -96,6 +97,7 @@ const ProjectPanel = ({ userId }: Props) => {
     // Award XP
     try {
       await supabase.rpc("add_xp" as any, { _user_id: userId, _amount: 15 });
+      bumpLocalCount(userId, "projects");
       toast.success("You gained +15 XP! 🧩");
     } catch {}
   };

@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Mic, Send, RefreshCw, AlertCircle, CheckCircle, Info } from "lucide-react";
+import { bumpLocalCount } from "@/hooks/useCareerProfile";
 
 interface Props {
   userId: string;
@@ -88,6 +89,7 @@ const InterviewPanel = ({ userId }: Props) => {
 
       // Award XP
       await supabase.rpc("add_xp" as any, { _user_id: userId, _amount: 20 });
+      bumpLocalCount(userId, "interviews");
       toast.success("You gained +20 XP! 🎯");
     } catch (e: any) {
       toast.error(e.message || "Failed to analyze answer");

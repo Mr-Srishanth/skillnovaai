@@ -8,8 +8,9 @@ type Msg = { role: "user" | "assistant"; content: string };
 
 interface Props {
   userId: string;
-  userContext?: { goal?: string; skills?: string; score?: number | null };
+  userContext?: Partial<import("@/hooks/useCareerProfile").CareerProfile>;
 }
+
 
 const SUGGESTIONS = [
   "What skills should I learn first?",

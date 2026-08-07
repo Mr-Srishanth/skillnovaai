@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Progress } from "@/components/ui/progress";
 import { validateRole } from "@/lib/validation";
+import { bumpLocalCount } from "@/hooks/useCareerProfile";
 
 interface ATSResult {
   atsScore: number;
@@ -112,6 +113,7 @@ const ResumePanel = ({ userId }: { userId: string }) => {
       const data = await resp.json();
       if (data.error) throw new Error(data.error);
       setResult(data);
+      bumpLocalCount(userId, "resumes");
       toast.success("Resume analysis complete!");
     } catch (e: any) {
       console.error(e);

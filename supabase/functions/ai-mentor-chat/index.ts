@@ -22,8 +22,17 @@ serve(async (req) => {
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
 
     const contextBlock = userContext
-      ? `\n\nUSER CONTEXT:\n- Career Goal: ${userContext.goal || "Not specified"}\n- Current Skills: ${userContext.skills || "Not specified"}\n- Latest Readiness Score: ${userContext.score ?? "No analysis yet"}`
+      ? `\n\nUSER CONTEXT (always use this — never ask for information already listed here):
+- Career Goal: ${userContext.goal || "Not specified"}
+- Current Skills: ${userContext.skills || "Not specified"}
+- Latest Readiness Score: ${userContext.score ?? "No analysis yet"}
+- Known Skill Gaps: ${(userContext.missingSkills || []).join(", ") || "none recorded"}
+- Roadmap Milestones Completed: ${(userContext.completedMilestones || []).join(", ") || "none yet"}
+- Analyses Run: ${userContext.analysesCount ?? 0} | Projects: ${userContext.projectsCount ?? 0} | Mock Interviews: ${userContext.interviewsCount ?? 0} | Resume Analyzed: ${userContext.resumeAnalyzed ? "yes" : "no"}
+- Streak: ${userContext.streak ?? 0} days | XP: ${userContext.xp ?? 0} (${userContext.level || "Beginner"})
+- Region: ${userContext.region || "India"}`
       : "";
+
 
     const systemPrompt = `You are SkillNova AI — an expert career mentor and AI advisor. You provide personalized, actionable career guidance.
 

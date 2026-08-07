@@ -16,14 +16,25 @@ import ResumePanel from "@/components/dashboard/ResumePanel";
 import SimulatorPanel from "@/components/dashboard/SimulatorPanel";
 import InterviewPanel from "@/components/dashboard/InterviewPanel";
 import ProjectPanel from "@/components/dashboard/ProjectPanel";
+import RoadmapPanel from "@/components/dashboard/RoadmapPanel";
+import ReadinessPanel from "@/components/dashboard/ReadinessPanel";
+import CompanyReadinessPanel from "@/components/dashboard/CompanyReadinessPanel";
+import SalaryInsightsPanel from "@/components/dashboard/SalaryInsightsPanel";
+import TrendsPanel from "@/components/dashboard/TrendsPanel";
+import InsightsPanel from "@/components/dashboard/InsightsPanel";
+import { useCareerProfile } from "@/hooks/useCareerProfile";
 
-export type DashboardTab = "overview" | "analyze" | "mentor" | "resume" | "simulator" | "history" | "compare" | "interview" | "projects";
+export type DashboardTab =
+  | "overview" | "analyze" | "roadmap" | "readiness" | "insights"
+  | "companies" | "salary" | "trends"
+  | "mentor" | "resume" | "simulator" | "history" | "compare" | "interview" | "projects";
 
 const Dashboard = () => {
   const { user, loading, signOut } = useAuth();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<DashboardTab>("overview");
   const [displayName, setDisplayName] = useState("");
+  const { profile } = useCareerProfile(user?.id || "");
 
   useEffect(() => {
     if (!loading && !user) navigate("/auth");
@@ -67,7 +78,7 @@ const Dashboard = () => {
         onSignOut={handleSignOut}
         userId={user.id}
       />
-      <div className="flex-1 flex flex-col relative z-10">
+      <div className="flex-1 flex flex-col relative z-10 min-w-0">
         <DashboardTopBar displayName={displayName} />
         <main className="flex-1 p-6 md:p-10 overflow-y-auto">
           <motion.div
@@ -78,7 +89,13 @@ const Dashboard = () => {
           >
             {activeTab === "overview" && <OverviewPanel userId={user.id} displayName={displayName} />}
             {activeTab === "analyze" && <AnalyzePanel userId={user.id} />}
-            {activeTab === "mentor" && <MentorPanel userId={user.id} userContext={{ goal: "", skills: "", score: null }} />}
+            {activeTab === "roadmap" && <RoadmapPanel userId={user.id} />}
+            {activeTab === "readiness" && <ReadinessPanel userId={user.id} />}
+            {activeTab === "insights" && <InsightsPanel userId={user.id} />}
+            {activeTab === "companies" && <CompanyReadinessPanel userId={user.id} />}
+            {activeTab === "salary" && <SalaryInsightsPanel userId={user.id} />}
+            {activeTab === "trends" && <TrendsPanel userId={user.id} />}
+            {activeTab === "mentor" && <MentorPanel userId={user.id} userContext={profile} />}
             {activeTab === "resume" && <ResumePanel userId={user.id} />}
             {activeTab === "simulator" && <SimulatorPanel userId={user.id} />}
             {activeTab === "interview" && <InterviewPanel userId={user.id} />}
