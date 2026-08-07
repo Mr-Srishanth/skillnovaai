@@ -93,7 +93,7 @@ const OverviewPanel = ({ userId, displayName }: Props) => {
 
   const latest = history[0];
   const nextStep = latest?.missing_skills && Array.isArray(latest.missing_skills) && latest.missing_skills.length > 0
-    ? latest.missing_skills[0] : null;
+    ? (typeof latest.missing_skills[0] === "string" ? latest.missing_skills[0] : (latest.missing_skills[0]?.skill ?? null)) : null;
 
   const greeting = latestScore != null ? "Welcome back" : "Welcome";
   const motivational = latestScore != null

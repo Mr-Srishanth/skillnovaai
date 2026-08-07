@@ -7,12 +7,23 @@ interface HistoryItem {
   id: string;
   skills: string;
   target_role: string;
-  missing_skills: string[];
-  recommended_learning: string[];
-  roadmap: string[];
+  missing_skills: any[];
+  recommended_learning: any[];
+  roadmap: any[];
   skill_score: number | null;
   created_at: string;
 }
+
+const toText = (v: any): string => {
+  if (v == null) return "";
+  if (typeof v === "string") return v;
+  if (typeof v === "object") {
+    const label = v.skill ?? v.title ?? v.name ?? v.step ?? v.resource ?? v.topic ?? "";
+    const extra = v.reason ?? v.description ?? v.why ?? "";
+    return [label, extra].filter(Boolean).join(" — ") || JSON.stringify(v);
+  }
+  return String(v);
+};
 
 const HistoryPanel = ({ userId }: { userId: string }) => {
   const [history, setHistory] = useState<HistoryItem[]>([]);
@@ -109,9 +120,9 @@ const HistoryPanel = ({ userId }: { userId: string }) => {
                       <div>
                         <h5 className="text-sm font-medium text-primary mb-2">Missing Skills</h5>
                         <ul className="space-y-1">
-                          {item.missing_skills.map((s, j) => (
+                          {(item.missing_skills ?? []).map((s, j) => (
                             <li key={j} className="text-sm text-foreground/80 flex gap-2">
-                              <span className="text-accent">•</span> {s}
+                              <span className="text-accent">•</span> {toText(s)}
                             </li>
                           ))}
                         </ul>
@@ -119,9 +130,9 @@ const HistoryPanel = ({ userId }: { userId: string }) => {
                       <div>
                         <h5 className="text-sm font-medium text-primary mb-2">Recommended Learning</h5>
                         <ul className="space-y-1">
-                          {item.recommended_learning.map((s, j) => (
+                          {(item.recommended_learning ?? []).map((s, j) => (
                             <li key={j} className="text-sm text-foreground/80 flex gap-2">
-                              <span className="text-accent">•</span> {s}
+                              <span className="text-accent">•</span> {toText(s)}
                             </li>
                           ))}
                         </ul>
@@ -129,9 +140,9 @@ const HistoryPanel = ({ userId }: { userId: string }) => {
                       <div>
                         <h5 className="text-sm font-medium text-primary mb-2">Roadmap</h5>
                         <ul className="space-y-1">
-                          {item.roadmap.map((s, j) => (
+                          {(item.roadmap ?? []).map((s, j) => (
                             <li key={j} className="text-sm text-foreground/80 flex gap-2">
-                              <span className="text-primary">Step {j + 1}:</span> {s}
+                              <span className="text-primary">Step {j + 1}:</span> {toText(s)}
                             </li>
                           ))}
                         </ul>
