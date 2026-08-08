@@ -82,6 +82,16 @@ const KnowledgePanel = ({ userId }: { userId: string }) => {
 
   useEffect(() => { loadLibrary(); }, [loadLibrary]);
 
+  // Deep-link from Project Studio: pre-fill the topic the user must learn first.
+  useEffect(() => {
+    const prefill = sessionStorage.getItem("skillnova:knowledge:prefill");
+    if (prefill) {
+      sessionStorage.removeItem("skillnova:knowledge:prefill");
+      setSourceType("topic");
+      setTopic(prefill);
+    }
+  }, []);
+
   const stats = useMemo(() => {
     const scored = items.filter((i) => typeof i.quiz_score === "number");
     const avgQuiz = scored.length
