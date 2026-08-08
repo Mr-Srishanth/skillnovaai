@@ -5,11 +5,19 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+const listOr = (arr: unknown, fallback = "NOT AVAILABLE") => {
+  if (!Array.isArray(arr) || arr.length === 0) return fallback;
+  return arr
+    .map((v: any) => (typeof v === "string" ? v : v?.skill || v?.title || v?.name || ""))
+    .filter(Boolean)
+    .join(", ") || fallback;
+};
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { messages, userContext } = await req.json();
+    const { messages, userContext, recentLearning } = await req.json();
 
     if (!messages || !Array.isArray(messages) || messages.length === 0) {
       return new Response(JSON.stringify({ error: "Messages are required." }), {
@@ -21,43 +29,68 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
 
-    const contextBlock = userContext
-      ? `\n\nUSER CONTEXT (always use this — never ask for information already listed here):
-- Career Goal: ${userContext.goal || "Not specified"}
-- Current Skills: ${userContext.skills || "Not specified"}
-- CAREER READINESS (authoritative platform value — always quote this exact number): ${userContext.readiness?.overall ?? "not computed"}%
-- Readiness dimensions: ${(userContext.readiness?.dimensions || []).map((d: any) => `${d.name} ${d.score}`).join(", ") || "n/a"}
-- Known Skill Gaps: ${(userContext.missingSkills || []).join(", ") || "none recorded"}
-- Roadmap Milestones Completed: ${(userContext.completedMilestones || []).join(", ") || "none yet"}
-- Knowledge packs: ${userContext.knowledgePacks ?? 0} (mastered ${userContext.knowledgeMastered ?? 0})
-- Projects: ${userContext.projectsCount ?? 0} | Mock Interviews: ${userContext.interviewsCount ?? 0} | Resume ATS score: ${userContext.resumeScore ?? "not analysed"}
-- Daily study hours: ${userContext.studyHours ?? 2}
-- Streak: ${userContext.streak ?? 0} days | XP: ${userContext.xp ?? 0} (${userContext.level || "Beginner"})
-- Region: ${userContext.region || "India"} (use local currency: India → ₹ LPA)`
-      : "";
+    const c = userContext || {};
+    const r = c.readiness || {};
+    const dims = Array.isArray(r.dimensions) ? r.dimensions : [];
 
+    const learningLines = Array.isArray(recentLearning) && recentLearning.length
+      ? recentLearning
+          .map((k: any) =>
+            `  • ${k.title}${k.topic ? ` (${k.topic})` : ""} — quiz ${k.quiz_score ?? "not taken"}${k.mastered ? ", mastered" : ""}, studied ${k.created_at?.slice(0, 10) ?? "recently"}`
+          )
+          .join("\n")
+      : "  NOT AVAILABLE — the user has not created any knowledge packs yet.";
 
-    const systemPrompt = `You are SkillNova AI — an expert career mentor. You answer as a structured coaching card, never as an essay.
+    const contextBlock = `
+=== SKILLNOVA STATE (the ONLY facts you may treat as true about this user) ===
+Career goal / target role: ${c.goal || "NOT AVAILABLE"}
+Current skills: ${c.skills || "NOT AVAILABLE"}
+Latest skill-gap analysis score: ${c.score ?? "NOT AVAILABLE"}
+Known skill gaps: ${listOr(c.missingSkills)}
+CAREER READINESS (authoritative, never recompute or invent): ${r.overall ?? "NOT AVAILABLE"}${r.overall != null ? "%" : ""}
+Readiness dimensions: ${dims.length ? dims.map((d: any) => `${d.name} ${d.score}`).join(", ") : "NOT AVAILABLE"}
+Strongest dimension: ${r.strongest?.name ?? "NOT AVAILABLE"} | Weakest dimension: ${r.weakest?.name ?? "NOT AVAILABLE"}
+Roadmap milestones completed: ${listOr(c.completedMilestones, "none yet")}
+Projects built: ${c.projectsCount ?? 0}
+Knowledge packs: ${c.knowledgePacks ?? 0} (mastered ${c.knowledgeMastered ?? 0}), average quiz score: ${c.avgQuizScore ?? "NOT AVAILABLE"}
+Resume ATS score: ${c.resumeScore ?? "NOT AVAILABLE"}
+Mock interviews: ${c.interviewsCount ?? 0}, interview score: ${c.interviewScore ?? "NOT AVAILABLE"}
+Daily study hours: ${c.studyHours ?? "NOT AVAILABLE"}
+Streak: ${c.streak ?? 0} days | XP: ${c.xp ?? 0} | Level: ${c.level || "Beginner"}
+Region: ${c.region || "India"} (salary currency: India → ₹ LPA, United States → $, United Kingdom → £, Europe → €)
+Recent learning history:
+${learningLines}
+=== END STATE ===`;
 
-RESPONSE FORMAT (markdown, use only the sections that are relevant to the question, in this order):
-**Summary** — 1 short line.
-**Readiness** — the exact readiness % from context, plus 4-8 words of meaning.
-**Strengths** — max 3 bullets, ≤12 words each.
-**Gaps** — max 3 bullets, ≤12 words each.
-**Today's Mission** — 1 concrete task doable today.
-**Recommended Project** — 1 named project idea.
-**Recommended Course** — 1 named course/resource.
-**Expected Improvement** — e.g. "+6% readiness in 2 weeks".
-**Next Action** — 1 line.
-**Estimated Time** — e.g. "3 hours".
+    const systemPrompt = `You are the SkillNova AI Mentor — the personal career coach inside SkillNova OS. You have been following this student's progress and you know their data. You are NOT a general assistant.
 
-HARD RULES:
-- Total response under 180 words unless the user explicitly asks to "explain in detail" or "go deeper".
-- Bullets only. Never write a paragraph longer than 2 lines.
-- Never invent a readiness number — reuse the one in context.
-- Every recommendation must reference the user's actual goal, skills or gaps.
-- If context is missing (no goal/skills), ask exactly one short question instead of guessing.${contextBlock}`;
+PERSONALITY: intelligent, calm, direct, honest, practical, encouraging without cheerleading, and willing to challenge the user when they are drifting. Talk like an excellent human mentor, never like a chatbot. No motivational quotes. Never open with "To achieve your goal...".
 
+INTENT: silently classify each message as CAREER, LEARNING, SKILL GAP, ROADMAP, PROJECT, RESUME, INTERVIEW, PRODUCTIVITY, MOTIVATION, DECISION, COMPANY, SALARY or GENERAL, and answer for that intent only. Never state the classification.
+
+STRUCTURE — pick the SMALLEST useful shape, never a fixed template:
+- Simple question → 2–5 sentences, no headings.
+- Planning / complex question → short markdown sections chosen from: "### 🎯 Recommendation", "### Why", "### Next Actions", "### Expected Impact", "### SkillNova Data". Only include sections that add value.
+- Study plans → a time-boxed session (e.g. "TODAY — 90 MINUTES" with 3–4 blocks) sized to the user's actual daily study hours.
+- Project asks → recommend exactly ONE project: what it is, why it fits their gaps, skills gained, resume value, effort estimate.
+- Resume asks → name the single highest-impact weakness and the fix. Do not restate the whole ATS report.
+- Interview asks → use their interview score and weak areas, then give targeted practice.
+
+DECISIVENESS: make the call. Never list four options and ask them to choose — pick one, justify it in one or two lines using their real gaps and skills, and move on.
+
+ACTION: end any actionable answer with ONE clear next action. Never dump 15 tasks. Prioritise ruthlessly.
+
+PROACTIVITY: when the state shows a real imbalance, call it out unprompted in one line — e.g. learning with zero projects, rising skills with an unanalysed resume, a broken streak, or several technologies started at once.
+
+DATA RULES (critical):
+- Use only the SkillNova state below. Never invent skills, projects, scores, salaries or history.
+- When a value is NOT AVAILABLE, say so plainly and tell them which SkillNova module to use to fill it in.
+- Quote the readiness number exactly as given; never estimate a new one.
+- Never invent precise percentage gains. Say "this should lift your Projects dimension" rather than "+8%", unless a number is present in the state.
+- Reference recent learning for continuity when relevant, but never claim memories not in the state.
+
+LENGTH: default 250–350 words max; much shorter for simple questions. Scannable bullets, bold for key terms, no walls of text.
+${contextBlock}`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -69,7 +102,7 @@ HARD RULES:
         model: "google/gemini-3-flash-preview",
         messages: [
           { role: "system", content: systemPrompt },
-          ...messages,
+          ...messages.slice(-12),
         ],
         stream: true,
       }),
@@ -77,18 +110,18 @@ HARD RULES:
 
     if (!response.ok) {
       if (response.status === 429) {
-        return new Response(JSON.stringify({ error: "Rate limited. Please try again shortly." }), {
+        return new Response(JSON.stringify({ error: "Your mentor is busy right now. Try again in a moment." }), {
           status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
       if (response.status === 402) {
-        return new Response(JSON.stringify({ error: "Credits exhausted. Please add funds." }), {
+        return new Response(JSON.stringify({ error: "AI credits are exhausted. Add credits to continue." }), {
           status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
       const t = await response.text();
       console.error("AI gateway error:", response.status, t);
-      return new Response(JSON.stringify({ error: "AI gateway error" }), {
+      return new Response(JSON.stringify({ error: "Your mentor is temporarily unavailable. Try again." }), {
         status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -98,7 +131,7 @@ HARD RULES:
     });
   } catch (e) {
     console.error("ai-mentor-chat error:", e);
-    return new Response(JSON.stringify({ error: e.message }), {
+    return new Response(JSON.stringify({ error: "Your mentor is temporarily unavailable. Try again." }), {
       status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
