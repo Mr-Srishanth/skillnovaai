@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import {
   Home, Brain, Bot, FileText, Telescope, Clock, GitCompare,
-  Mic, Code2, Menu, X, LogOut, ArrowLeft, BookOpen,
+  Mic, Hammer, Menu, X, LogOut, ArrowLeft, BookOpen,
   Route, Gauge, Lightbulb, Building2, Banknote, TrendingUp
 } from "lucide-react";
 import { useState } from "react";
@@ -43,7 +43,7 @@ const groups: { label: string; items: { id: DashboardTab; label: string; icon: t
       { id: "resume", label: "Resume ATS", icon: FileText },
       { id: "simulator", label: "Simulator", icon: Telescope },
       { id: "interview", label: "Interview", icon: Mic },
-      { id: "projects", label: "Projects", icon: Code2 },
+      { id: "projects", label: "Project Studio", icon: Hammer },
       { id: "history", label: "History", icon: Clock },
       { id: "compare", label: "Compare", icon: GitCompare },
     ],

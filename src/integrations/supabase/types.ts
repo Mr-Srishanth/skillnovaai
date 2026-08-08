@@ -155,6 +155,96 @@ export type Database = {
         }
         Relationships: []
       }
+      studio_projects: {
+        Row: {
+          blueprint: Json
+          career_relevance: string | null
+          completed_tasks: Json
+          created_at: string
+          difficulty: string
+          duration: string | null
+          extra_tasks: Json
+          goal: string | null
+          id: string
+          interview_questions: Json | null
+          milestones: Json
+          notes: string | null
+          prerequisites: Json
+          project_type: string | null
+          quality: Json
+          resume_entry: Json | null
+          resume_value: string | null
+          skills_addressed: Json
+          skills_developed: Json
+          source_mode: string
+          status: string
+          summary: string | null
+          tech_stack: Json
+          title: string
+          updated_at: string
+          user_id: string
+          why: string | null
+        }
+        Insert: {
+          blueprint?: Json
+          career_relevance?: string | null
+          completed_tasks?: Json
+          created_at?: string
+          difficulty?: string
+          duration?: string | null
+          extra_tasks?: Json
+          goal?: string | null
+          id?: string
+          interview_questions?: Json | null
+          milestones?: Json
+          notes?: string | null
+          prerequisites?: Json
+          project_type?: string | null
+          quality?: Json
+          resume_entry?: Json | null
+          resume_value?: string | null
+          skills_addressed?: Json
+          skills_developed?: Json
+          source_mode?: string
+          status?: string
+          summary?: string | null
+          tech_stack?: Json
+          title: string
+          updated_at?: string
+          user_id: string
+          why?: string | null
+        }
+        Update: {
+          blueprint?: Json
+          career_relevance?: string | null
+          completed_tasks?: Json
+          created_at?: string
+          difficulty?: string
+          duration?: string | null
+          extra_tasks?: Json
+          goal?: string | null
+          id?: string
+          interview_questions?: Json | null
+          milestones?: Json
+          notes?: string | null
+          prerequisites?: Json
+          project_type?: string | null
+          quality?: Json
+          resume_entry?: Json | null
+          resume_value?: string | null
+          skills_addressed?: Json
+          skills_developed?: Json
+          source_mode?: string
+          status?: string
+          summary?: string | null
+          tech_stack?: Json
+          title?: string
+          updated_at?: string
+          user_id?: string
+          why?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

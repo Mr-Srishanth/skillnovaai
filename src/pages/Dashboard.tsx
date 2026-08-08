@@ -15,7 +15,7 @@ import MentorPanel from "@/components/dashboard/MentorPanel";
 import ResumePanel from "@/components/dashboard/ResumePanel";
 import SimulatorPanel from "@/components/dashboard/SimulatorPanel";
 import InterviewPanel from "@/components/dashboard/InterviewPanel";
-import ProjectPanel from "@/components/dashboard/ProjectPanel";
+import ProjectStudioPanel from "@/components/dashboard/ProjectStudioPanel";
 import RoadmapPanel from "@/components/dashboard/RoadmapPanel";
 import ReadinessPanel from "@/components/dashboard/ReadinessPanel";
 import CompanyReadinessPanel from "@/components/dashboard/CompanyReadinessPanel";
@@ -40,6 +40,15 @@ const Dashboard = () => {
   useEffect(() => {
     if (!loading && !user) navigate("/auth");
   }, [user, loading, navigate]);
+
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const tab = (e as CustomEvent).detail?.tab as DashboardTab | undefined;
+      if (tab) setActiveTab(tab);
+    };
+    window.addEventListener("skillnova:navigate", handler);
+    return () => window.removeEventListener("skillnova:navigate", handler);
+  }, []);
 
   useEffect(() => {
     if (!user) return;
@@ -101,7 +110,7 @@ const Dashboard = () => {
             {activeTab === "resume" && <ResumePanel userId={user.id} />}
             {activeTab === "simulator" && <SimulatorPanel userId={user.id} />}
             {activeTab === "interview" && <InterviewPanel userId={user.id} />}
-            {activeTab === "projects" && <ProjectPanel userId={user.id} />}
+            {activeTab === "projects" && <ProjectStudioPanel userId={user.id} />}
             {activeTab === "history" && <HistoryPanel userId={user.id} />}
             {activeTab === "compare" && <ComparisonPanel />}
           </motion.div>
