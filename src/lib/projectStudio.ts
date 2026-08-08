@@ -245,9 +245,9 @@ export async function saveRecommendation(
       tech_stack: rec.techStack,
       skills_developed: rec.skillsDeveloped,
       skills_addressed: rec.skillsAddressed,
-      prerequisites: rec.prerequisites,
+      prerequisites: rec.prerequisites as any,
       quality: rec.quality as any,
-    })
+    } as any)
     .select("*")
     .single();
   if (error) throw new Error(error.message);
