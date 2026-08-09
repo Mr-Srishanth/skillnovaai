@@ -92,6 +92,8 @@ export type Database = {
           id: string
           mastered: boolean
           note_style: string
+          notebook: Json | null
+          notebook_style: Json | null
           output: Json
           quiz_score: number | null
           reading_minutes: number | null
@@ -108,6 +110,8 @@ export type Database = {
           id?: string
           mastered?: boolean
           note_style?: string
+          notebook?: Json | null
+          notebook_style?: Json | null
           output?: Json
           quiz_score?: number | null
           reading_minutes?: number | null
@@ -124,6 +128,8 @@ export type Database = {
           id?: string
           mastered?: boolean
           note_style?: string
+          notebook?: Json | null
+          notebook_style?: Json | null
           output?: Json
           quiz_score?: number | null
           reading_minutes?: number | null

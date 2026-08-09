@@ -44,10 +44,13 @@ export interface KnowledgeItem {
   source_ref: string | null;
   note_style: string;
   output: KnowledgePack;
+  notebook?: unknown | null;
+  notebook_style?: unknown | null;
   quiz_score: number | null;
   reading_minutes: number | null;
   mastered: boolean;
   created_at: string;
+  updated_at?: string;
 }
 
 export async function generatePack(input: {

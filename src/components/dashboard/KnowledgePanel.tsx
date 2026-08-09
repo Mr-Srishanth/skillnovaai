@@ -4,6 +4,7 @@ import ReactMarkdown from "react-markdown";
 import {
   BookOpen, Brain, FileText, Youtube, Type, Upload, Sparkles, Search,
   Download, Printer, Trash2, ScrollText, Network, HelpCircle, Layers, Zap, Clock, Target, RefreshCw,
+  PenLine, Copy,
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -12,11 +13,17 @@ import {
   downloadText, extractPdfText, generatePack, packToMarkdown,
   type KnowledgeItem, type KnowledgePack, type NoteStyle, type SourceType,
 } from "@/lib/knowledge";
+import {
+  DEFAULT_STYLE, HAND_PRESETS, PAPER_LABELS, generateNotebook,
+  type Notebook, type NotebookStyle,
+} from "@/lib/notebook";
+import NotebookOptions from "./knowledge/notebook/NotebookOptions";
 import { PanelHeader, ThinkingState, MeterBar, ScoreRing } from "./intelligence/IntelligenceUI";
 
 const MindMapView = lazy(() => import("./knowledge/MindMapView"));
 const QuizRunner = lazy(() => import("./knowledge/QuizRunner"));
 const FlashcardDeck = lazy(() => import("./knowledge/FlashcardDeck"));
+const NotebookViewer = lazy(() => import("./knowledge/notebook/NotebookViewer"));
 
 const SOURCES: { id: SourceType; label: string; icon: typeof Type }[] = [
   { id: "topic", label: "Topic", icon: Type },
@@ -35,6 +42,7 @@ const STYLES: { id: NoteStyle; label: string }[] = [
 
 const OUTPUTS = [
   { id: "notes", label: "Smart Notes", icon: BookOpen },
+  { id: "notebook", label: "Handwritten Notebook", icon: PenLine },
   { id: "mindmap", label: "Mind Map", icon: Network },
   { id: "quiz", label: "Quiz", icon: HelpCircle },
   { id: "flashcards", label: "Flashcards", icon: Layers },
@@ -52,6 +60,15 @@ const THINKING = [
   "Compressing everything into a revision sheet…",
 ];
 
+const NOTEBOOK_THINKING = [
+  "Understanding the material you just learned…",
+  "Deciding what belongs on each page…",
+  "Spotting concepts that deserve a diagram…",
+  "Laying out headings, definitions and examples…",
+  "Drawing diagrams in your notebook style…",
+  "Numbering pages and binding the notebook…",
+];
+
 const KnowledgePanel = ({ userId }: { userId: string }) => {
   const { profile } = useCareerProfile(userId);
   const [sourceType, setSourceType] = useState<SourceType>("topic");
@@ -66,6 +83,10 @@ const KnowledgePanel = ({ userId }: { userId: string }) => {
   const [tab, setTab] = useState<OutputTab>("notes");
   const [items, setItems] = useState<KnowledgeItem[]>([]);
   const [query, setQuery] = useState("");
+  const [notebook, setNotebook] = useState<Notebook | null>(null);
+  const [notebookStyle, setNotebookStyle] = useState<NotebookStyle>(DEFAULT_STYLE);
+  const [notebookLoading, setNotebookLoading] = useState(false);
+  const [showNotebookOptions, setShowNotebookOptions] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const printRef = useRef<HTMLDivElement>(null);
 
@@ -152,6 +173,7 @@ const KnowledgePanel = ({ userId }: { userId: string }) => {
 
     setLoading(true);
     setPack(null);
+    setNotebook(null);
     try {
       const result = await generatePack({
         sourceType,
@@ -194,16 +216,64 @@ const KnowledgePanel = ({ userId }: { userId: string }) => {
     }
   };
 
+  /** Persist the notebook onto the existing knowledge pack row. */
+  const persistNotebook = useCallback(async (nb: Notebook, id: string | null) => {
+    if (!id) return;
+    await supabase
+      .from("knowledge_items")
+      .update({ notebook: nb as any, notebook_style: nb.style as any } as any)
+      .eq("id", id);
+  }, []);
+
+  const buildNotebook = async () => {
+    if (!pack) return;
+    setNotebookLoading(true);
+    setTab("notebook");
+    try {
+      const nb = await generateNotebook({ pack, style: notebookStyle, noteStyle, profile });
+      setNotebook(nb);
+      await persistNotebook(nb, activeId);
+      await supabase.rpc("add_xp", { _user_id: userId, _amount: 25 } as any).then(
+        () => toast.success(`Notebook ready — ${nb.pages.length} pages, +25 XP`),
+        () => toast.success(`Notebook ready — ${nb.pages.length} pages`)
+      );
+      loadLibrary();
+    } catch (e) {
+      toast.error(`Notebook generation failed. Your notes are safe. (${(e as Error).message})`);
+    } finally {
+      setNotebookLoading(false);
+    }
+  };
+
+  const updateNotebook = (next: Notebook) => {
+    setNotebook(next);
+    setNotebookStyle(next.style);
+    persistNotebook(next, activeId);
+  };
+
   const openItem = (item: KnowledgeItem) => {
     setPack(item.output);
     setActiveId(item.id);
-    setTab("notes");
+    const nb = (item.notebook as Notebook | null) || null;
+    setNotebook(nb && Array.isArray(nb.pages) && nb.pages.length ? nb : null);
+    if (nb?.style) setNotebookStyle(nb.style);
+    setTab(nb?.pages?.length ? "notebook" : "notes");
     window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const duplicateItem = async (item: KnowledgeItem) => {
+    const { id, created_at, updated_at, ...rest } = item as any;
+    const { error } = await supabase
+      .from("knowledge_items")
+      .insert({ ...rest, user_id: userId, title: `${item.title} (copy)` } as any);
+    if (error) return toast.error(error.message);
+    loadLibrary();
+    toast.success("Duplicated into your library");
   };
 
   const removeItem = async (id: string) => {
     await supabase.from("knowledge_items").delete().eq("id", id);
-    if (activeId === id) { setPack(null); setActiveId(null); }
+    if (activeId === id) { setPack(null); setActiveId(null); setNotebook(null); }
     loadLibrary();
     toast.success("Removed from library");
   };
@@ -414,7 +484,38 @@ const KnowledgePanel = ({ userId }: { userId: string }) => {
                 <Brain className="w-3.5 h-3.5 text-primary shrink-0 mt-0.5" /> {pack.careerLink}
               </p>
             )}
+
+            {/* Visual Notebook Mode */}
+            <div className="mt-4 border-t border-border pt-4 space-y-3">
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  onClick={buildNotebook}
+                  disabled={notebookLoading}
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-gradient-to-r from-primary to-secondary text-primary-foreground text-sm font-medium disabled:opacity-50 transition-opacity"
+                >
+                  {notebookLoading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+                  {notebookLoading ? "Writing your notebook…" : notebook ? "Regenerate complete notebook" : "✨ Generate complete notebook"}
+                </button>
+                <button
+                  onClick={() => setShowNotebookOptions((s) => !s)}
+                  aria-label="Notebook options"
+                  className="flex items-center gap-2 text-xs px-3 py-2 rounded-lg glass-card text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <PenLine className="w-3.5 h-3.5" />
+                  {HAND_PRESETS[notebookStyle.hand].label} · {PAPER_LABELS[notebookStyle.paper]} · {notebookStyle.depth}
+                </button>
+                {notebook && (
+                  <span className="text-[11px] text-muted-foreground">{notebook.pages.length} pages saved</span>
+                )}
+              </div>
+              {showNotebookOptions && (
+                <div className="glass-card p-4">
+                  <NotebookOptions style={notebookStyle} onChange={setNotebookStyle} />
+                </div>
+              )}
+            </div>
           </div>
+
 
           <div className="flex flex-wrap gap-2">
             {OUTPUTS.map((o) => {
@@ -446,6 +547,33 @@ const KnowledgePanel = ({ userId }: { userId: string }) => {
                   </ul>
                 </div>
               </div>
+            )}
+            {tab === "notebook" && (
+              notebookLoading ? (
+                <ThinkingState steps={NOTEBOOK_THINKING} />
+              ) : notebook ? (
+                <NotebookViewer
+                  notebook={notebook}
+                  pack={pack}
+                  profile={profile}
+                  noteStyle={noteStyle}
+                  onChange={updateNotebook}
+                />
+              ) : (
+                <div className="glass-card p-8 text-center space-y-3">
+                  <PenLine className="w-7 h-7 mx-auto text-primary" />
+                  <p className="text-sm text-muted-foreground max-w-md mx-auto">
+                    Turn this pack into a real handwritten study notebook — cover page, contents, hand-drawn
+                    diagrams, formulas, code and an exam revision page. Pick your style above, then generate.
+                  </p>
+                  <button
+                    onClick={buildNotebook}
+                    className="text-xs px-4 py-2 rounded-lg bg-primary text-primary-foreground"
+                  >
+                    Generate complete notebook
+                  </button>
+                </div>
+              )
             )}
             {tab === "mindmap" && <MindMapView map={pack.mindMap} />}
             {tab === "quiz" && <QuizRunner quiz={pack.quiz} onFinish={saveQuizScore} />}
@@ -514,24 +642,46 @@ const KnowledgePanel = ({ userId }: { userId: string }) => {
                 className="glass-card p-4 hover-lift group"
               >
                 <div className="flex items-start justify-between gap-2">
-                  <button onClick={() => openItem(item)} className="text-left flex-1">
+                  <button onClick={() => openItem(item)} className="text-left flex-1" aria-label={`Open ${item.title}`}>
                     <p className="text-sm font-medium text-foreground line-clamp-2">{item.title}</p>
                     <p className="text-[11px] text-muted-foreground mt-1 capitalize">
                       {item.source_type} · {item.note_style} notes
+                      {item.topic ? ` · ${item.topic}` : ""}
                     </p>
                   </button>
-                  <button
-                    onClick={() => removeItem(item.id)}
-                    className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-all"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
+                  <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-all">
+                    <button
+                      onClick={() => duplicateItem(item)}
+                      aria-label={`Duplicate ${item.title}`}
+                      className="text-muted-foreground hover:text-foreground"
+                    >
+                      <Copy className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={() => removeItem(item.id)}
+                      aria-label={`Delete ${item.title}`}
+                      className="text-muted-foreground hover:text-destructive"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                 </div>
-                <div className="flex items-center gap-3 mt-3 text-[11px] text-muted-foreground">
+                <div className="flex flex-wrap items-center gap-3 mt-3 text-[11px] text-muted-foreground">
+                  {(item.notebook as Notebook | null)?.pages?.length ? (
+                    <span className="text-primary flex items-center gap-1">
+                      <PenLine className="w-3 h-3" />
+                      {(item.notebook as Notebook).pages.length}p ·{" "}
+                      {HAND_PRESETS[(item.notebook as Notebook).style?.hand || "clean"].label}
+                    </span>
+                  ) : null}
                   {typeof item.quiz_score === "number" && <span>Quiz {item.quiz_score}%</span>}
                   {item.mastered && <span className="text-primary">Mastered</span>}
                   <span>{new Date(item.created_at).toLocaleDateString()}</span>
+                  {item.updated_at && item.updated_at !== item.created_at && (
+                    <span>edited {new Date(item.updated_at).toLocaleDateString()}</span>
+                  )}
                 </div>
+
               </motion.div>
             ))}
           </div>
