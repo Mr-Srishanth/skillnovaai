@@ -117,8 +117,9 @@ function normalisePage(raw: any): NotebookPage {
       ? raw.blocks.filter(
           (b: any) =>
             b && b.type &&
+            (['cover','toc','divider','diagram'].includes(b.type) ||
             (b.text || b.formula || b.code || b.diagram ||
-              (b.items || []).length || (b.keyTerms || []).length || b.term || b.meaning)
+              (b.items || []).length || (b.keyTerms || []).length || b.term || b.meaning))
         )
       : [],
   };

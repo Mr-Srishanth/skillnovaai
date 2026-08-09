@@ -106,7 +106,13 @@ const NotebookPageView = forwardRef<HTMLDivElement, Props>(
               {b.items?.slice(0, 4).map((it, j) => (
                 <p key={j} style={{ ...body, fontSize: hand.size + 1, opacity: 0.9, margin: 0 }}>{it}</p>
               ))}
+              {!b.items?.length && page.title && page.title !== (b.text || notebookTitle) && (
+                <p style={{ ...body, fontSize: hand.size + 1, opacity: 0.9, margin: 0 }}>{page.title}</p>
+              )}
               {b.meaning && <p style={{ ...body, marginTop: 18, opacity: 0.85 }}>{b.meaning}</p>}
+              <p style={{ ...body, marginTop: 26, opacity: 0.6, fontSize: hand.size - 2 }}>
+                {new Date().toLocaleDateString(undefined, { day: "numeric", month: "long", year: "numeric" })}
+              </p>
             </div>
           );
 
