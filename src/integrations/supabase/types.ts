@@ -50,6 +50,165 @@ export type Database = {
         }
         Relationships: []
       }
+      career_events: {
+        Row: {
+          created_at: string
+          id: string
+          kind: string
+          label: string
+          meta: Json
+          user_id: string
+          value: number | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          kind: string
+          label: string
+          meta?: Json
+          user_id: string
+          value?: number | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          kind?: string
+          label?: string
+          meta?: Json
+          user_id?: string
+          value?: number | null
+        }
+        Relationships: []
+      }
+      career_jobs: {
+        Row: {
+          analysis: Json
+          applied_at: string | null
+          company: string | null
+          created_at: string
+          description: string | null
+          id: string
+          job_readiness: number | null
+          match_score: number | null
+          requirements: Json
+          source_url: string | null
+          status: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          analysis?: Json
+          applied_at?: string | null
+          company?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          job_readiness?: number | null
+          match_score?: number | null
+          requirements?: Json
+          source_url?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          analysis?: Json
+          applied_at?: string | null
+          company?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          job_readiness?: number | null
+          match_score?: number | null
+          requirements?: Json
+          source_url?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      career_simulations: {
+        Row: {
+          base_role: string | null
+          created_at: string
+          id: string
+          result: Json
+          roles: Json
+          scenario: string | null
+          user_id: string
+        }
+        Insert: {
+          base_role?: string | null
+          created_at?: string
+          id?: string
+          result?: Json
+          roles?: Json
+          scenario?: string | null
+          user_id: string
+        }
+        Update: {
+          base_role?: string | null
+          created_at?: string
+          id?: string
+          result?: Json
+          roles?: Json
+          scenario?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      execution_tasks: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          effort_minutes: number
+          horizon: string
+          id: string
+          meta: Json
+          source: string | null
+          status: string
+          task_type: string
+          title: string
+          updated_at: string
+          user_id: string
+          why: string | null
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          effort_minutes?: number
+          horizon?: string
+          id?: string
+          meta?: Json
+          source?: string | null
+          status?: string
+          task_type?: string
+          title: string
+          updated_at?: string
+          user_id: string
+          why?: string | null
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          effort_minutes?: number
+          horizon?: string
+          id?: string
+          meta?: Json
+          source?: string | null
+          status?: string
+          task_type?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+          why?: string | null
+        }
+        Relationships: []
+      }
       gamification: {
         Row: {
           badges: Json
@@ -143,6 +302,63 @@ export type Database = {
         }
         Relationships: []
       }
+      opportunities: {
+        Row: {
+          created_at: string
+          eligibility: string | null
+          id: string
+          kind: string
+          link: string | null
+          match_reason: string | null
+          match_score: number | null
+          missing_skills: Json
+          organization: string | null
+          preparation: Json
+          required_skills: Json
+          saved: boolean
+          timing: string | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          eligibility?: string | null
+          id?: string
+          kind?: string
+          link?: string | null
+          match_reason?: string | null
+          match_score?: number | null
+          missing_skills?: Json
+          organization?: string | null
+          preparation?: Json
+          required_skills?: Json
+          saved?: boolean
+          timing?: string | null
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          eligibility?: string | null
+          id?: string
+          kind?: string
+          link?: string | null
+          match_reason?: string | null
+          match_score?: number | null
+          missing_skills?: Json
+          organization?: string | null
+          preparation?: Json
+          required_skills?: Json
+          saved?: boolean
+          timing?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -158,6 +374,51 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           id?: string
+        }
+        Relationships: []
+      }
+      skill_verifications: {
+        Row: {
+          answers: Json
+          assessment: Json
+          claimed_level: string | null
+          created_at: string
+          id: string
+          result: Json
+          score: number | null
+          skill: string
+          status: string
+          updated_at: string
+          user_id: string
+          verified_level: string | null
+        }
+        Insert: {
+          answers?: Json
+          assessment?: Json
+          claimed_level?: string | null
+          created_at?: string
+          id?: string
+          result?: Json
+          score?: number | null
+          skill: string
+          status?: string
+          updated_at?: string
+          user_id: string
+          verified_level?: string | null
+        }
+        Update: {
+          answers?: Json
+          assessment?: Json
+          claimed_level?: string | null
+          created_at?: string
+          id?: string
+          result?: Json
+          score?: number | null
+          skill?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+          verified_level?: string | null
         }
         Relationships: []
       }
