@@ -126,7 +126,7 @@ export function useCareerBrain(userId: string): CareerBrain {
     () => ({
       goal: profile.goal,
       skills: profile.skills,
-      readiness: profile.readiness?.score ?? 0,
+      readiness: profile.readiness?.overall ?? 0,
       strongest: evidence[0]?.skill,
       weakest: profile.missingSkills[0],
       missingSkills: profile.missingSkills,
@@ -156,7 +156,7 @@ export function useCareerBrain(userId: string): CareerBrain {
     () =>
       deterministicNextAction({
         goal: profile.goal,
-        readiness: profile.readiness?.score ?? 0,
+        readiness: profile.readiness?.overall ?? 0,
         projectsCount: projects.length,
         knowledgePacks: knowledge.length,
         resumeScore: profile.resumeScore,
