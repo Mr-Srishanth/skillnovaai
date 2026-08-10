@@ -2,7 +2,8 @@ import { motion } from "framer-motion";
 import {
   Home, Brain, Bot, FileText, Telescope, Clock, GitCompare,
   Mic, Hammer, Menu, X, LogOut, ArrowLeft, BookOpen,
-  Route, Gauge, Lightbulb, Building2, Banknote, TrendingUp
+  Route, Gauge, Lightbulb, Building2, Banknote, TrendingUp,
+  Briefcase, BadgeCheck, Compass, ListChecks, LineChart, Shuffle
 } from "lucide-react";
 import { useState } from "react";
 import type { DashboardTab } from "@/pages/Dashboard";
@@ -23,6 +24,7 @@ const groups: { label: string; items: { id: DashboardTab; label: string; icon: t
       { id: "overview", label: "Overview", icon: Home },
       { id: "analyze", label: "Analyze", icon: Brain },
       { id: "roadmap", label: "Roadmap", icon: Route },
+      { id: "plan", label: "Daily Plan", icon: ListChecks },
       { id: "knowledge", label: "Knowledge", icon: BookOpen },
     ],
   },
@@ -30,6 +32,11 @@ const groups: { label: string; items: { id: DashboardTab; label: string; icon: t
     label: "Intelligence",
     items: [
       { id: "readiness", label: "Readiness", icon: Gauge },
+      { id: "hiring", label: "Hiring", icon: Briefcase },
+      { id: "verify", label: "Verify Skills", icon: BadgeCheck },
+      { id: "opportunities", label: "Opportunities", icon: Compass },
+      { id: "pathsim", label: "Path Simulator", icon: Shuffle },
+      { id: "analytics", label: "Analytics", icon: LineChart },
       { id: "insights", label: "Insights", icon: Lightbulb },
       { id: "companies", label: "Companies", icon: Building2 },
       { id: "salary", label: "Salary", icon: Banknote },

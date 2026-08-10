@@ -23,12 +23,19 @@ import SalaryInsightsPanel from "@/components/dashboard/SalaryInsightsPanel";
 import TrendsPanel from "@/components/dashboard/TrendsPanel";
 import InsightsPanel from "@/components/dashboard/InsightsPanel";
 import KnowledgePanel from "@/components/dashboard/KnowledgePanel";
+import HiringPanel from "@/components/dashboard/HiringPanel";
+import VerifyPanel from "@/components/dashboard/VerifyPanel";
+import PathSimulatorPanel from "@/components/dashboard/PathSimulatorPanel";
+import OpportunitiesPanel from "@/components/dashboard/OpportunitiesPanel";
+import PlanPanel from "@/components/dashboard/PlanPanel";
+import AnalyticsPanel from "@/components/dashboard/AnalyticsPanel";
 import { useCareerProfile } from "@/hooks/useCareerProfile";
 
 export type DashboardTab =
   | "overview" | "analyze" | "roadmap" | "readiness" | "insights"
   | "companies" | "salary" | "trends" | "knowledge"
-  | "mentor" | "resume" | "simulator" | "history" | "compare" | "interview" | "projects";
+  | "mentor" | "resume" | "simulator" | "history" | "compare" | "interview" | "projects"
+  | "hiring" | "verify" | "pathsim" | "opportunities" | "plan" | "analytics";
 
 const Dashboard = () => {
   const { user, loading, signOut } = useAuth();
@@ -112,6 +119,12 @@ const Dashboard = () => {
             {activeTab === "interview" && <InterviewPanel userId={user.id} />}
             {activeTab === "projects" && <ProjectStudioPanel userId={user.id} />}
             {activeTab === "history" && <HistoryPanel userId={user.id} />}
+            {activeTab === "hiring" && <HiringPanel userId={user.id} />}
+            {activeTab === "verify" && <VerifyPanel userId={user.id} />}
+            {activeTab === "pathsim" && <PathSimulatorPanel userId={user.id} />}
+            {activeTab === "opportunities" && <OpportunitiesPanel userId={user.id} />}
+            {activeTab === "plan" && <PlanPanel userId={user.id} />}
+            {activeTab === "analytics" && <AnalyticsPanel userId={user.id} />}
             {activeTab === "compare" && <ComparisonPanel />}
           </motion.div>
         </main>
