@@ -119,6 +119,12 @@ const Dashboard = () => {
             {activeTab === "interview" && <InterviewPanel userId={user.id} />}
             {activeTab === "projects" && <ProjectStudioPanel userId={user.id} />}
             {activeTab === "history" && <HistoryPanel userId={user.id} />}
+            {activeTab === "hiring" && <HiringPanel userId={user.id} />}
+            {activeTab === "verify" && <VerifyPanel userId={user.id} />}
+            {activeTab === "pathsim" && <PathSimulatorPanel userId={user.id} />}
+            {activeTab === "opportunities" && <OpportunitiesPanel userId={user.id} />}
+            {activeTab === "plan" && <PlanPanel userId={user.id} />}
+            {activeTab === "analytics" && <AnalyticsPanel userId={user.id} />}
             {activeTab === "compare" && <ComparisonPanel />}
           </motion.div>
         </main>
