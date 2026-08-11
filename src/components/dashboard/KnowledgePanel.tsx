@@ -14,7 +14,7 @@ import {
   type KnowledgeItem, type KnowledgePack, type NoteStyle, type SourceType,
 } from "@/lib/knowledge";
 import {
-  DEFAULT_STYLE, HAND_PRESETS, PAPER_LABELS, generateNotebook,
+  DEFAULT_STYLE, HAND_PRESETS, PAPER_LABELS, ensureSections, generateNotebook,
   type Notebook, type NotebookStyle,
 } from "@/lib/notebook";
 import NotebookOptions from "./knowledge/notebook/NotebookOptions";
@@ -221,7 +221,10 @@ const KnowledgePanel = ({ userId }: { userId: string }) => {
     if (!id) return;
     await supabase
       .from("knowledge_items")
-      .update({ notebook: nb as any, notebook_style: nb.style as any } as any)
+      .update({
+        notebook: { ...nb, updatedAt: new Date().toISOString() } as any,
+        notebook_style: nb.style as any,
+      } as any)
       .eq("id", id);
   }, []);
 
@@ -254,8 +257,9 @@ const KnowledgePanel = ({ userId }: { userId: string }) => {
   const openItem = (item: KnowledgeItem) => {
     setPack(item.output);
     setActiveId(item.id);
-    const nb = (item.notebook as Notebook | null) || null;
-    setNotebook(nb && Array.isArray(nb.pages) && nb.pages.length ? nb : null);
+    const raw = (item.notebook as Notebook | null) || null;
+    const nb = raw && (raw.sections?.length || raw.pages?.length) ? ensureSections(raw) : null;
+    setNotebook(nb);
     if (nb?.style) setNotebookStyle(nb.style);
     setTab(nb?.pages?.length ? "notebook" : "notes");
     window.scrollTo({ top: 0, behavior: "smooth" });
