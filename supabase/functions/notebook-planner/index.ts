@@ -5,21 +5,41 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const SYSTEM = `You are SkillNova Notebook Architect — you convert an already-generated knowledge pack into the page-by-page plan of a real student's handwritten study notebook.
+const SYSTEM = `You are SkillNova Notebook Architect — you turn an already-generated knowledge pack into the SECTION-BY-SECTION content of a real student's handwritten study notebook.
 
-RULES
-- You are NOT summarising again. You are LAYING OUT teaching content into notebook pages.
-- Ground everything strictly in the supplied knowledge pack. Never invent statistics, citations or facts that are not implied by it.
-- Each page must hold a coherent chunk: roughly 5-9 blocks, never more than 11. A page with a diagram holds fewer text blocks.
-- Write in the compact voice of good handwritten notes: short lines, concrete examples, arrows, "i.e.", "e.g.".
-- Add a "diagram" block ONLY when a visual genuinely teaches the concept (architectures, flows, hierarchies, data structures, ER models, comparisons, timelines, networks, cycles, layered stacks). Never decorate.
-- Use "formula" blocks for maths/notation and "code" blocks for programming. Never fake handwriting inside code.
-- highlight[] holds SHORT fragments (2-6 words) that appear verbatim inside that block's text/items and deserve marker emphasis. Never highlight a whole sentence.
-- EVERY block must carry its own content: a "callout"/"text"/"example" block MUST have a non-empty "text" (and optional items); a "definition" needs term+meaning; never emit a block that only has "highlight".
-- Heading hierarchy is strict: one "heading" per page maximum, "subheading" for sections.
-- Page 1 is always the cover (a single "cover" block). If the notebook is 8 pages or more, page 2 is a "toc" block.
-- The final page is an exam/revision page built from the pack's revision sheet.
-- Do not restate the same content on two pages.`;
+YOU DO NOT DO PAGE LAYOUT. A separate typesetting engine paginates your output, numbers pages and builds the contents page. Never emit cover pages, contents pages or page numbers.
+
+HOW TO THINK (in order)
+1. UNDERSTAND the material and the subject family (programming / database / DSA / theory / systems / maths / business).
+2. EXTRACT the real concepts, not the headings of the source.
+3. ORDER them into a learning sequence: foundations -> mechanism -> application -> pitfalls -> revision.
+4. For each concept decide, on merit, which blocks actually teach it. NEVER apply a fixed template.
+5. Detect visual opportunities: only concepts with structure, flow, hierarchy, relationships or comparison get a diagram.
+
+BLOCK CHOICE BY SUBJECT (guidance, not a template)
+- Programming: concept -> syntax -> code -> output -> common mistake -> viva.
+- Database: definition -> architecture diagram -> example -> comparison -> exam point.
+- DSA: concept -> visual (tree/graph) -> steps -> complexity formula -> code -> practice.
+- Theory/OS/Networks: definition -> diagram (state/flow) -> key points -> comparison -> exam point -> viva.
+
+CONTENT RULES
+- Ground everything strictly in the supplied knowledge pack. Never invent statistics, citations, versions or facts.
+- Write in the compact voice of excellent handwritten notes: short lines, concrete examples, "i.e.", "e.g.", arrows.
+- Never write filler. Every block must teach something a student could be tested on.
+- Code must be short (4-14 lines), correctly indented and syntactically valid.
+- Formulas use plain text, e.g. O(log n), T(n) = 2T(n/2) + n.
+- highlight[] holds SHORT verbatim fragments (2-6 words) that appear inside that block's own text/items.
+- EVERY block must carry its own content. A block with only "highlight" or only "importance" is invalid.
+- "callout" blocks MUST set kind. Use them sparingly — at most 2-3 per section, and never two in a row of the same kind.
+- Mark importance="critical" on at most 2 blocks per section. Most blocks need no importance at all.
+- Never repeat the same explanation in two sections.
+- Do not promise that a question will appear in an exam. Say "likely exam focus" / "good revision target".
+
+SECTION RULES
+- 5-9 sections for a short notebook, 8-12 for medium, 12-18 for detailed.
+- Each section covers ONE coherent concept and holds 4-10 blocks. Long concepts should be split into "X — part 1 / part 2" sections rather than one huge section.
+- Section 1 introduces the topic and why it matters. The LAST section is a "5-Minute Revision" section built from the pack's revision sheet: keywords, formulas, comparisons, common mistakes, likely viva areas, quick questions.
+- Section titles are short (2-6 words) — they become the contents page.`;
 
 const DIAGRAM = {
   type: "object",
@@ -30,7 +50,7 @@ const DIAGRAM = {
       enum: ["flow", "hierarchy", "tree", "er", "network", "comparison", "timeline", "cycle", "stack"],
       description: "flow=process/pipeline steps, hierarchy/tree=parent-child, er=entities with attributes, network=hub and spokes, comparison=side-by-side columns, timeline=ordered stages, cycle=repeating loop, stack=layered architecture (top layer first)",
     },
-    title: { type: "string", description: "Short diagram caption" },
+    title: { type: "string", description: "Short diagram caption that says what the diagram teaches" },
     nodes: {
       type: "array",
       description: "3-8 nodes. For 'er', detail holds comma-separated attributes. Omit for 'comparison'.",
@@ -78,16 +98,30 @@ const BLOCK = {
   properties: {
     type: {
       type: "string",
-      enum: ["cover", "toc", "heading", "subheading", "text", "bullets", "definition", "formula", "code", "callout", "example", "keyterms", "diagram"],
+      enum: [
+        "heading", "subheading", "text", "bullets", "definition", "formula", "code",
+        "callout", "example", "keyterms", "diagram", "steps", "viva", "table",
+      ],
+      description: "heading=section title (the engine adds it automatically, avoid), subheading=sub-topic, steps=ordered process, viva=oral questions, table=small comparison grid",
     },
-    text: { type: "string", description: "For heading/subheading/text/callout/example/cover title/formula caption" },
-    items: { type: "array", items: { type: "string" }, description: "For bullets / toc entries / exam points" },
+    text: { type: "string", description: "For subheading/text/callout/example/formula caption/code caption/table caption" },
+    items: { type: "array", items: { type: "string" }, description: "For bullets, callout sub-points, steps entries" },
     term: { type: "string", description: "For definition blocks" },
     meaning: { type: "string", description: "For definition blocks" },
-    formula: { type: "string", description: "Plain-text math, e.g. O(log n) or E = mc^2 or (a+b)/2" },
-    code: { type: "string", description: "Real, runnable, correctly indented code" },
-    language: { type: "string", description: "Code language, e.g. java, python" },
-    tone: { type: "string", enum: ["info", "warning", "exam"], description: "For callout blocks" },
+    formula: { type: "string", description: "Plain-text maths, e.g. O(log n) or (a+b)/2" },
+    code: { type: "string", description: "Real, runnable, correctly indented code, 4-14 lines" },
+    language: { type: "string", description: "Code language, e.g. java, python, sql" },
+    output: { type: "string", description: "Expected output of the code block, when useful" },
+    kind: {
+      type: "string",
+      enum: ["core", "remember", "exam", "viva", "example", "mistake", "code", "connection", "realworld", "trick"],
+      description: "Callout category. core=core idea, remember=must remember, exam=likely exam focus, mistake=common mistake, trick=memory trick/mnemonic, connection=links to another concept, realworld=practical use",
+    },
+    importance: {
+      type: "string",
+      enum: ["critical", "high", "medium", "low"],
+      description: "Only set when genuinely above normal. Max 2 'critical' per section.",
+    },
     highlight: { type: "array", items: { type: "string" }, description: "Short verbatim fragments to marker-highlight" },
     keyTerms: {
       type: "array",
@@ -98,15 +132,37 @@ const BLOCK = {
         required: ["term", "meaning"],
       },
     },
+    qa: {
+      type: "array",
+      description: "For viva blocks: 2-4 oral questions that test understanding, not memorisation",
+      items: {
+        type: "object",
+        properties: {
+          q: { type: "string" },
+          a: { type: "string", description: "One or two lines" },
+          followUp: { type: "string", description: "Optional harder follow-up question" },
+        },
+        required: ["q", "a"],
+      },
+    },
+    columns: {
+      type: "array",
+      description: "For table blocks: 2-3 columns with equal-length item lists",
+      items: {
+        type: "object",
+        properties: { header: { type: "string" }, items: { type: "array", items: { type: "string" } } },
+        required: ["header", "items"],
+      },
+    },
     diagram: DIAGRAM,
   },
   required: ["type"],
 };
 
-const PAGE = {
+const SECTION = {
   type: "object",
   properties: {
-    title: { type: "string", description: "Running header for the page (short)" },
+    title: { type: "string", description: "Short section title (2-6 words) used in the contents page" },
     blocks: { type: "array", items: BLOCK },
   },
   required: ["title", "blocks"],
@@ -114,22 +170,32 @@ const PAGE = {
 
 const NOTEBOOK_SCHEMA = {
   name: "notebook_plan",
-  description: "Complete page-by-page plan of a handwritten study notebook",
+  description: "Section-by-section content of a handwritten study notebook",
   parameters: {
     type: "object",
     properties: {
       title: { type: "string" },
       subtitle: { type: "string", description: "One short line under the cover title" },
-      pages: { type: "array", items: PAGE },
+      sections: { type: "array", items: SECTION },
     },
-    required: ["title", "subtitle", "pages"],
+    required: ["title", "subtitle", "sections"],
   },
 };
 
-const PAGE_SCHEMA = {
-  name: "notebook_page",
-  description: "A single regenerated notebook page",
-  parameters: { type: "object", properties: { page: PAGE }, required: ["page"] },
+const SECTION_SCHEMA = {
+  name: "notebook_section",
+  description: "A single regenerated notebook section",
+  parameters: { type: "object", properties: { section: SECTION }, required: ["section"] },
+};
+
+const BLOCKS_SCHEMA = {
+  name: "notebook_blocks",
+  description: "Replacement blocks for one edited part of a notebook",
+  parameters: {
+    type: "object",
+    properties: { blocks: { type: "array", items: BLOCK } },
+    required: ["blocks"],
+  },
 };
 
 const DIAGRAM_SCHEMA = {
@@ -139,15 +205,42 @@ const DIAGRAM_SCHEMA = {
 };
 
 const DEPTH_HINT: Record<string, string> = {
-  short: "SHORT notebook: 6-8 pages total (including cover and final revision page).",
-  medium: "MEDIUM notebook: 10-14 pages total (including cover, contents, and final revision page).",
-  detailed: "DETAILED notebook: 16-22 pages total (including cover, contents, and final revision page).",
+  short: "SHORT notebook: 5-8 sections.",
+  medium: "MEDIUM notebook: 8-12 sections.",
+  detailed: "DETAILED notebook: 12-18 sections.",
 };
 
 const DIAGRAM_HINT: Record<string, string> = {
   minimal: "DIAGRAM LEVEL minimal: at most 1-2 diagrams in the whole notebook, only where indispensable.",
-  balanced: "DIAGRAM LEVEL balanced: a diagram roughly every 3-4 pages, only where it truly teaches.",
-  heavy: "DIAGRAM LEVEL visual-heavy: aim for a diagram on nearly every content page, but still only where it teaches something real.",
+  balanced: "DIAGRAM LEVEL balanced: a diagram in roughly one section in three, only where it truly teaches.",
+  heavy: "DIAGRAM LEVEL visual-heavy: a diagram in most sections, but still only where it teaches something real.",
+};
+
+const STYLE_HINT: Record<string, string> = {
+  detailed:
+    "STYLE = DETAILED. Deep explanations with the reasoning behind each idea, worked examples, code where the subject is technical, connections between concepts, and diagrams for anything structural.",
+  short:
+    "STYLE = SHORT. Only essential information. Mostly definitions, tight bullets and one example per concept. No long prose, no optional asides.",
+  exam:
+    "STYLE = EXAM. Definitions verbatim-ready, numbered key points, comparisons, likely exam focus callouts, short-answer phrasing, long-answer skeletons, memory tricks and viva blocks. Every section ends with an exam or viva block.",
+  revision:
+    "STYLE = REVISION. Ultra-fast recall: keyword bullets, formulas, tiny comparison tables, common mistakes and quick questions. Minimal prose, maximum scannability.",
+  onepage:
+    "STYLE = ONE PAGE. Maximum information density that is still readable: 3-5 sections only, dense keyword bullets, one table, one diagram at most, no long prose.",
+  handwritten:
+    "STYLE = HANDWRITTEN. The full visual notebook experience: definitions, examples, diagrams, callouts, memory tricks, code where relevant and a strong revision section.",
+};
+
+const ACTION_HINT: Record<string, string> = {
+  improve: "Rewrite this content so it explains the idea more clearly and concretely. Keep the same block types unless a different one teaches better.",
+  shorter: "Compress this content to the essential signal. Fewer words, same meaning. Prefer bullets.",
+  exam: "Rework this content for exam performance: sharp definition, numbered key points, and one 'exam' callout naming the likely exam focus.",
+  example: "Keep the existing content and ADD one concrete practical example block (and a short code block if the subject is programming).",
+  viva: "Keep the existing content and ADD one viva block with 2-3 oral questions plus answers that test understanding.",
+  code: "Keep the existing content and ADD one short, correct code block with its expected output.",
+  mistake: "Keep the existing content and ADD one 'mistake' callout describing the mistake students actually make here.",
+  trick: "Keep the existing content and ADD one 'trick' callout with a genuinely useful mnemonic or mental model.",
+  expand: "Expand this content with more depth: the mechanism behind it, one example, and one practical consequence.",
 };
 
 function packDigest(pack: any) {
@@ -199,11 +292,30 @@ async function callAI(body: unknown) {
   return JSON.parse(call.function.arguments);
 }
 
+/** Describe existing blocks back to the model so selective edits stay grounded. */
+function blocksDigest(blocks: any[]) {
+  return (blocks || [])
+    .map((b, i) => {
+      const bits = [
+        b.text, b.term && `${b.term}: ${b.meaning || ""}`, b.formula, b.code,
+        (b.items || []).join(" | "),
+        (b.qa || []).map((q: any) => `Q ${q.q} / A ${q.a}`).join(" | "),
+        b.diagram && `[diagram ${b.diagram.kind}: ${b.diagram.title}]`,
+      ].filter(Boolean);
+      return `${i + 1}. (${b.type}${b.kind ? `/${b.kind}` : ""}) ${bits.join(" — ")}`;
+    })
+    .join("\n");
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { mode = "notebook", pack, options = {}, profile, page, pageTitle, context, instruction } = await req.json();
+    const {
+      mode = "notebook", pack, options = {}, profile,
+      sectionTitle, context, instruction, blocks, action,
+    } = await req.json();
+
     if (!pack || !pack.notes) {
       return new Response(JSON.stringify({ error: "No knowledge pack supplied." }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -216,23 +328,41 @@ serve(async (req) => {
 - Current skills: ${p.skills || "not recorded"}
 - Skill gaps: ${(p.missingSkills || []).join(", ") || "none recorded"}
 - Level: ${p.level || "Beginner"}
-Use this only to choose examples, emphasis and difficulty. Never invent personal details.`;
+Use this ONLY to choose examples, emphasis and difficulty. Never distort educational accuracy to personalise, and never invent personal details.`;
 
-    const styleLine = `NOTE STYLE: ${options.noteStyle || "detailed"}
+    const noteStyle = String(options.noteStyle || "detailed");
+    const styleLine = `${STYLE_HINT[noteStyle] || STYLE_HINT.detailed}
 ${DEPTH_HINT[options.depth as string] || DEPTH_HINT.medium}
 ${DIAGRAM_HINT[options.diagramLevel as string] || DIAGRAM_HINT.balanced}`;
 
-    let schema = NOTEBOOK_SCHEMA;
+    let schema: any = NOTEBOOK_SCHEMA;
     let user = "";
 
-    if (mode === "page") {
-      schema = PAGE_SCHEMA;
-      user = `${learner}\n\n${styleLine}\n\n${packDigest(pack)}\n\nExisting notebook outline:\n${(context || []).map((t: string, i: number) => `${i + 1}. ${t}`).join("\n")}\n\nRegenerate ONLY the page titled "${pageTitle}". Keep it on the same subject, do not duplicate other pages.${instruction ? `\nUser instruction: ${instruction}` : ""}`;
+    if (mode === "section") {
+      schema = SECTION_SCHEMA;
+      user = `${learner}\n\n${styleLine}\n\n${packDigest(pack)}\n\nExisting notebook outline:\n${(context || [])
+        .map((t: string, i: number) => `${i + 1}. ${t}`)
+        .join("\n")}\n\nRegenerate ONLY the section titled "${sectionTitle}". Stay on that exact subject and do not duplicate the other sections.${
+        instruction ? `\nUser instruction: ${instruction}` : ""
+      }`;
+    } else if (mode === "blocks") {
+      schema = BLOCKS_SCHEMA;
+      user = `${learner}\n\n${styleLine}\n\n${packDigest(pack)}\n\nSECTION: ${sectionTitle}\n\nCURRENT CONTENT OF THIS PART:\n${blocksDigest(
+        blocks || []
+      )}\n\nTASK: ${ACTION_HINT[action as string] || ACTION_HINT.improve}${
+        instruction ? `\nUser instruction: ${instruction}` : ""
+      }\n\nReturn the FULL replacement block list for this part only (1-6 blocks). Do not touch anything else in the notebook.`;
     } else if (mode === "diagram") {
       schema = DIAGRAM_SCHEMA;
-      user = `${learner}\n\n${packDigest(pack)}\n\nPage context: ${pageTitle}\nNearby notes: ${(context || []).join(" | ")}\n\nProduce ONE clear teaching diagram for this page. Prefer a different, clearer structure than before.${instruction ? `\nUser instruction: ${instruction}` : ""}`;
+      user = `${learner}\n\n${packDigest(pack)}\n\nSection: ${sectionTitle}\nNearby notes: ${(context || []).join(
+        " | "
+      )}\n\nProduce ONE clear teaching diagram for this section. Pick the diagram kind that actually matches the concept (process -> flow, parent/child -> hierarchy, entities -> er, layers -> stack, two options -> comparison). Prefer a clearer structure than before.${
+        instruction ? `\nUser instruction: ${instruction}` : ""
+      }`;
     } else {
-      user = `${learner}\n\n${styleLine}\n\n${packDigest(pack)}\n\nPlan the complete handwritten notebook now.`;
+      user = `${learner}\n\n${styleLine}\n\n${packDigest(
+        pack
+      )}\n\nPlan the complete handwritten notebook content now, section by section.`;
     }
 
     const result = await callAI({
