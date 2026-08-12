@@ -69,7 +69,7 @@ const DashboardSidebar = ({ activeTab, onTabChange, displayName, onSignOut, user
 
       <GamificationWidget userId={userId} />
 
-      <nav className="flex-1 px-3 py-2 space-y-3 overflow-y-auto">
+      <nav className="flex-1 px-3 py-2 space-y-3 overflow-y-auto scroll-dark">
         {groups.map((group) => (
           <div key={group.label} className="space-y-0.5">
             <p className="px-3 pt-2 pb-1 text-[10px] uppercase tracking-widest text-muted-foreground/60 font-display">
@@ -136,7 +136,7 @@ const DashboardSidebar = ({ activeTab, onTabChange, displayName, onSignOut, user
       {mobileOpen && (
         <div className="md:hidden fixed inset-0 z-50">
           <div className="absolute inset-0 bg-black/60" onClick={() => setMobileOpen(false)} />
-          <aside className="absolute left-0 top-0 h-full w-64 bg-sidebar flex flex-col border-r border-sidebar-border">
+          <aside className="absolute left-0 top-0 h-full w-64 bg-sidebar flex flex-col border-r border-sidebar-border overflow-hidden">
             <button onClick={() => setMobileOpen(false)} className="absolute top-4 right-4 p-1">
               <X className="w-4 h-4" />
             </button>
@@ -146,7 +146,7 @@ const DashboardSidebar = ({ activeTab, onTabChange, displayName, onSignOut, user
       )}
 
       {/* Desktop */}
-      <aside className="w-60 h-screen sticky top-0 overflow-y-auto bg-sidebar border-r border-sidebar-border flex-col shrink-0 hidden md:flex">
+      <aside className="w-60 h-screen sticky top-0 overflow-hidden bg-sidebar border-r border-sidebar-border flex-col shrink-0 hidden md:flex">
         {sidebarContent}
       </aside>
     </>

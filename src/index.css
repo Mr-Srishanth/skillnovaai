@@ -206,3 +206,33 @@
   0%, 100% { box-shadow: 0 0 20px hsl(var(--neon-cyan) / 0.4), 0 0 60px hsl(var(--neon-cyan) / 0.15); }
   50% { box-shadow: 0 0 30px hsl(var(--neon-cyan) / 0.6), 0 0 80px hsl(var(--neon-cyan) / 0.25), 0 0 120px hsl(var(--neon-cyan) / 0.1); }
 }
+
+/* Dark, premium scrollbars for in-app scroll containers (sidebar, panels).
+   Keeps scrolling fully functional while removing the bright default track. */
+@layer utilities {
+  .scroll-dark {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--muted-foreground) / 0.28) transparent;
+    overflow-x: hidden;
+    overscroll-behavior: contain;
+  }
+  .scroll-dark::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  .scroll-dark::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .scroll-dark::-webkit-scrollbar-thumb {
+    background-color: hsl(var(--muted-foreground) / 0.25);
+    border-radius: 9999px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+  }
+  .scroll-dark::-webkit-scrollbar-thumb:hover {
+    background-color: hsl(var(--muted-foreground) / 0.45);
+  }
+  .scroll-dark::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+}

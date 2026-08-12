@@ -101,9 +101,14 @@ const ReadinessPanel = ({ userId }: { userId: string }) => {
             >
               <div className="flex items-center justify-between mb-2">
                 <h3 className="font-display font-bold text-sm text-foreground">{d.name}</h3>
-                <span className="font-display font-bold text-primary">{d.score}</span>
+                <span className="font-display font-bold text-primary">{d.known ? d.score : "N/A"}</span>
               </div>
-              <MeterBar value={d.score} delay={i * 0.07} />
+              <MeterBar value={d.known ? d.score : 0} delay={i * 0.07} />
+              {!d.known && (
+                <p className="text-[11px] text-muted-foreground mt-2">
+                  Not enough evidence yet — this dimension is excluded from your overall score.
+                </p>
+              )}
               {text ? (
                 <>
                   <p className="text-xs text-muted-foreground mt-3">{text.insight}</p>
