@@ -62,9 +62,9 @@ const AnalyticsPanel = ({ userId }: { userId: string }) => {
               <div key={d.name}>
                 <div className="flex justify-between text-xs mb-1">
                   <span className="text-foreground">{d.name}</span>
-                  <span className="text-muted-foreground">{d.score}%</span>
+                  <span className="text-muted-foreground">{d.known ? `${d.score}%` : "No evidence yet"}</span>
                 </div>
-                <MeterBar value={d.score} />
+                <MeterBar value={d.known ? d.score : 0} />
               </div>
             ))}
           </div>

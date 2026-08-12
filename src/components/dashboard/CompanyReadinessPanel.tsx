@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { Building2, CheckSquare } from "lucide-react";
@@ -37,11 +37,20 @@ const CompanyReadinessPanel = ({ userId }: { userId: string }) => {
     );
   };
 
+  const selectionKey = [...selected].sort().join("|");
+
+  // READ ≠ ANALYZE: load the persisted analysis for this exact selection, never regenerate on mount.
+  useEffect(() => {
+    if (!profile.goal) return;
+    setData(readCache<Company[]>("company", profile, selectionKey));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profile.goal, selectionKey]);
+
   const generate = async () => {
     if (!selected.length) return toast.error("Pick at least one company");
     setLoading(true);
     try {
-      const key = [...selected].sort().join("|");
+      const key = selectionKey;
       const res = await runIntelligence<{ companies: Company[] }>("company", profile, { companies: selected });
       setData(res.companies);
       writeCache("company", profile, res.companies, key);
@@ -52,13 +61,6 @@ const CompanyReadinessPanel = ({ userId }: { userId: string }) => {
     }
   };
 
-  const loadCached = () => {
-    const key = [...selected].sort().join("|");
-    const cached = readCache<Company[]>("company", profile, key);
-    if (cached) { setData(cached); return true; }
-    return false;
-  };
-
   if (profileLoading) return <ThinkingState steps={["Loading your career profile..."]} />;
   if (!profile.goal) return <EmptyGoalState what="company readiness analysis" />;
 
@@ -66,7 +68,7 @@ const CompanyReadinessPanel = ({ userId }: { userId: string }) => {
     <div className="max-w-5xl">
       <PanelHeader
         title="Company Readiness"
-        subtitle={`See how you stack up against real hiring bars for ${profile.goal} roles.`}
+        subtitle={`Estimated alignment between your current profile and each company's bar for ${profile.goal} roles — not a hiring probability.`}
       />
 
       <div className="glass-card p-6 mb-6">
@@ -93,7 +95,7 @@ const CompanyReadinessPanel = ({ userId }: { userId: string }) => {
           <motion.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
-            onClick={() => { if (!loadCached()) generate(); }}
+            onClick={generate}
             disabled={loading}
             className="px-5 py-2.5 rounded-lg font-display font-bold text-sm bg-gradient-to-r from-primary to-accent text-primary-foreground disabled:opacity-40"
           >
@@ -109,6 +111,12 @@ const CompanyReadinessPanel = ({ userId }: { userId: string }) => {
 
       {loading && (
         <ThinkingState steps={["Recalling each company's hiring bar...", "Comparing against your profile...", "Listing missing requirements...", "Building your prep checklist..."]} />
+      )}
+
+      {!data && !loading && (
+        <div className="glass-card p-8 text-center mb-6">
+          <p className="text-sm text-muted-foreground">No readiness analysis yet for this company selection.</p>
+        </div>
       )}
 
       {data && !loading && (
@@ -132,7 +140,7 @@ const CompanyReadinessPanel = ({ userId }: { userId: string }) => {
                     {c.interviewDifficulty} interview
                   </span>
                 </div>
-                <span className="font-display font-bold text-lg text-primary">{c.readiness}%</span>
+                <span className="font-display font-bold text-lg text-primary" title="Profile alignment score">{c.readiness}%</span>
               </div>
               <MeterBar value={c.readiness} delay={i * 0.08} />
               <p className="text-xs text-muted-foreground mt-3">{c.summary}</p>

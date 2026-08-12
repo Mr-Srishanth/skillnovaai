@@ -27,6 +27,8 @@ export interface ReadinessDimension {
   name: "Skills" | "Projects" | "Knowledge" | "Resume" | "Interview" | "Consistency";
   score: number;
   weight: number;
+  /** false when we have no evidence at all for this dimension (UNKNOWN, not zero) */
+  known: boolean;
 }
 
 export interface ReadinessResult {
@@ -93,20 +95,31 @@ const WEIGHTS: Record<ReadinessDimension["name"], number> = {
 };
 
 export function computeReadiness(s: EngineSignals): ReadinessResult {
+  /**
+   * UNKNOWN is not ZERO. A dimension only counts toward the overall score when
+   * the student has actually given us evidence for it; otherwise it is excluded
+   * and the remaining weights are renormalised, so a missing resume can never
+   * silently drag the readiness score down.
+   */
   const dimensions: ReadinessDimension[] = [
-    { name: "Skills", score: skillsDimension(s), weight: WEIGHTS.Skills },
-    { name: "Projects", score: projectsDimension(s), weight: WEIGHTS.Projects },
-    { name: "Knowledge", score: knowledgeDimension(s), weight: WEIGHTS.Knowledge },
-    { name: "Resume", score: resumeDimension(s), weight: WEIGHTS.Resume },
-    { name: "Interview", score: interviewDimension(s), weight: WEIGHTS.Interview },
-    { name: "Consistency", score: consistencyDimension(s), weight: WEIGHTS.Consistency },
+    { name: "Skills", score: skillsDimension(s), weight: WEIGHTS.Skills, known: countSkills(s.skills) > 0 },
+    { name: "Projects", score: projectsDimension(s), weight: WEIGHTS.Projects, known: s.projectsCount > 0 || s.completedMilestones > 0 },
+    { name: "Knowledge", score: knowledgeDimension(s), weight: WEIGHTS.Knowledge, known: s.knowledgePacks > 0 },
+    { name: "Resume", score: resumeDimension(s), weight: WEIGHTS.Resume, known: s.resumeScore != null },
+    { name: "Interview", score: interviewDimension(s), weight: WEIGHTS.Interview, known: s.interviewScore != null },
+    { name: "Consistency", score: consistencyDimension(s), weight: WEIGHTS.Consistency, known: s.streak > 0 || s.xp > 0 },
   ];
 
-  const overall = clamp(dimensions.reduce((acc, d) => acc + d.score * d.weight, 0));
-  const sorted = [...dimensions].sort((a, b) => b.score - a.score);
-  const hasData = Boolean(s.goal) && dimensions.some((d) => d.score > 0);
+  const measured = dimensions.filter((d) => d.known);
+  const totalWeight = measured.reduce((acc, d) => acc + d.weight, 0);
+  const overall = totalWeight > 0
+    ? clamp(measured.reduce((acc, d) => acc + d.score * d.weight, 0) / totalWeight)
+    : 0;
 
-  return { overall, dimensions, strongest: sorted[0], weakest: sorted[sorted.length - 1], hasData };
+  const ranked = (measured.length ? measured : dimensions).slice().sort((a, b) => b.score - a.score);
+  const hasData = Boolean(s.goal) && measured.length > 0;
+
+  return { overall, dimensions, strongest: ranked[0], weakest: ranked[ranked.length - 1], hasData };
 }
 
 export function readinessVerdict(overall: number): string {
