@@ -36,12 +36,11 @@ const RoadmapPanel = ({ userId }: { userId: string }) => {
   const [done, setDone] = useState<string[]>([]);
   const [open, setOpen] = useState<string | null>(null);
 
+  // READ ≠ ANALYZE: mounting only loads the persisted roadmap, it never generates one.
   useEffect(() => {
     if (!profile.goal) return;
     setDone(getCompletedMilestones(userId, profile.goal));
-    const cached = readCache<Roadmap>("roadmap", profile);
-    if (cached) setData(cached);
-    else generate();
+    setData(readCache<Roadmap>("roadmap", profile));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profile.goal]);
 
@@ -71,15 +70,28 @@ const RoadmapPanel = ({ userId }: { userId: string }) => {
 
   const total = data?.milestones.length || 0;
   const progress = total ? Math.round((done.length / total) * 100) : 0;
+  const nextMilestone = data?.milestones.find((m) => !done.includes(m.stage)) || null;
 
   return (
     <div className="max-w-5xl">
       <PanelHeader
         title="Dynamic Career Roadmap"
         subtitle={`A living roadmap to become a ${profile.goal}. It adapts as you complete milestones.`}
-        onRefresh={generate}
+        onRefresh={data ? generate : undefined}
         refreshing={loading}
       />
+
+      {!data && !loading && (
+        <div className="glass-card p-10 text-center mb-6">
+          <Rocket className="w-7 h-7 mx-auto text-primary mb-3" />
+          <p className="text-sm text-muted-foreground mb-4">
+            No roadmap yet for <span className="text-foreground">{profile.goal}</span>. Generate one when you're ready — it stays saved until you regenerate it.
+          </p>
+          <button onClick={generate} className="px-5 py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-medium">
+            Generate roadmap
+          </button>
+        </div>
+      )}
 
       {loading && !data && (
         <ThinkingState steps={["Mapping your target role...", "Sequencing milestones...", "Estimating timelines...", "Attaching projects & resources..."]} />
@@ -161,10 +173,24 @@ const RoadmapPanel = ({ userId }: { userId: string }) => {
             </div>
           </div>
 
+          {nextMilestone && done.length > 0 && (
+            <div className="glass-card p-5 mt-6">
+              <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Milestone completed</p>
+              <p className="font-display font-bold text-foreground mt-1">Next: {nextMilestone.title}</p>
+              <p className="text-xs text-muted-foreground mt-1">{nextMilestone.description}</p>
+              <button
+                onClick={() => setOpen(nextMilestone.stage)}
+                className="mt-3 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-xs font-medium"
+              >
+                Continue learning
+              </button>
+            </div>
+          )}
+
           {progress === 100 && (
             <div className="glass-card p-6 mt-6 text-center">
               <Rocket className="w-6 h-6 mx-auto text-primary mb-2" />
-              <p className="font-display font-bold text-foreground">Placement ready. Regenerate your roadmap to aim higher.</p>
+              <p className="font-display font-bold text-foreground">Every milestone complete. Regenerate only when your goal or skills change.</p>
             </div>
           )}
         </>
