@@ -31,6 +31,18 @@ Deno.serve(async (req) => {
       }),
     });
 
+    if (!res.ok) {
+      const detail = await res.text();
+      console.error("mock-interview gateway error", res.status, detail.slice(0, 500));
+      if (res.status === 429) {
+        return new Response(JSON.stringify({ error: "Rate limited. Please try again shortly." }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+      if (res.status === 402) {
+        return new Response(JSON.stringify({ error: "AI credits exhausted. Add credits to continue." }), { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+      return new Response(JSON.stringify({ error: `AI gateway error: ${res.status}` }), { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
     const completion = await res.json();
     let content = completion.choices?.[0]?.message?.content || "{}";
     content = content.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
