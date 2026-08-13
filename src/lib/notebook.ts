@@ -338,10 +338,20 @@ export function paginate(
     const blocks = section.blocks;
     if (!blocks.length) return;
 
-    const total = blocks.reduce((s, b) => s + blockHeight(b, style), 0) + 52;
     const remaining = page ? height - used : 0;
-    // Continue on the current page only if the whole short section fits comfortably.
-    const canShare = !!page && total <= remaining - 24 && remaining > height * 0.28;
+    const subH = blockHeight({ type: "subheading", text: section.title }, style) + 8;
+    const firstH = blockHeight(blocks[0], style);
+    /**
+     * Fill the current page whenever the section can start on it meaningfully:
+     * either the whole (short) section fits, or its title plus its first block
+     * fit with room to spare — the continuation logic below carries the rest to
+     * the next page. This removes the half-empty pages caused by only ever
+     * sharing a page with sections that fit entirely.
+     */
+    const canShare =
+      !!page &&
+      remaining >= height * 0.18 &&
+      subH + firstH + 16 <= remaining;
 
     if (!canShare) newPage(section, false);
     else page!.blocks.push({ type: "subheading", text: section.title });
