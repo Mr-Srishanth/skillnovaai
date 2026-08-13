@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Compass, Bookmark, ExternalLink } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -30,12 +30,65 @@ const OpportunitiesPanel = ({ userId }: { userId: string }) => {
   const [busy, setBusy] = useState(false);
   const [filter, setFilter] = useState("all");
 
+  const rowToOpp = (r: any): Opp => ({
+    title: r.title,
+    organization: r.organization || "",
+    kind: r.kind,
+    matchLevel: (r.match_score ?? 0) >= 80 ? "high" : (r.match_score ?? 0) >= 55 ? "medium" : "low",
+    matchReason: r.match_reason || "",
+    requiredSkills: Array.isArray(r.required_skills) ? r.required_skills : [],
+    missingSkills: Array.isArray(r.missing_skills) ? r.missing_skills : [],
+    preparation: Array.isArray(r.preparation) ? r.preparation : [],
+    eligibility: r.eligibility || "",
+    timing: r.timing || "",
+    link: r.link || "",
+  });
+
+  // READ ≠ ANALYZE: mounting only reloads the persisted match set, it never runs discovery.
+  useEffect(() => {
+    if (!userId) return;
+    let active = true;
+    (async () => {
+      const { data } = await supabase
+        .from("opportunities")
+        .select("*")
+        .eq("user_id", userId)
+        .order("match_score", { ascending: false })
+        .order("created_at", { ascending: false })
+        .limit(40);
+      if (active && data?.length) setItems(data.map(rowToOpp));
+    })();
+    return () => { active = false; };
+  }, [userId]);
+
   const discover = async () => {
     setBusy(true);
     try {
       const res = await callCareerOS<{ items: Opp[] }>("opportunities", { region: brain.profile.region }, brain.snapshot);
-      setItems(res.items || []);
-      await logCareerEvent(userId, "opportunities", `Discovered ${res.items?.length ?? 0} opportunities`, res.items?.length ?? 0);
+      const found = res.items || [];
+      setItems(found);
+      if (found.length) {
+        // Replace the previous unsaved match set; bookmarked opportunities are kept.
+        await supabase.from("opportunities").delete().eq("user_id", userId).eq("saved", false);
+        await supabase.from("opportunities").insert(
+          found.map((o) => ({
+            user_id: userId,
+            title: o.title,
+            organization: o.organization,
+            kind: o.kind,
+            match_score: LEVEL_SCORE[o.matchLevel] ?? 50,
+            match_reason: o.matchReason,
+            required_skills: (o.requiredSkills || []) as any,
+            missing_skills: (o.missingSkills || []) as any,
+            preparation: (o.preparation || []) as any,
+            eligibility: o.eligibility,
+            timing: o.timing,
+            link: o.link || null,
+            saved: false,
+          })),
+        );
+      }
+      await logCareerEvent(userId, "opportunities", `Discovered ${found.length} opportunities`, found.length);
     } catch (e: any) {
       toast.error(e.message || "Discovery failed.");
     } finally {
