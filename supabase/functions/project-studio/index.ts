@@ -5,7 +5,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-type Mode = "recommend" | "blueprint" | "assist" | "resume" | "interview" | "code";
+type Mode = "recommend" | "blueprint" | "assist" | "resume" | "interview" | "code" | "intelligence";
 
 const SYSTEM = `You are SkillNova Project Intelligence — a senior software architect and career engineer.
 RULES:
@@ -63,7 +63,97 @@ const RECOMMENDATION_ITEM = {
   ],
 };
 
+
+const INTELLIGENCE_SCHEMA = {
+  name: "project_intelligence",
+  description: "Structured analysis of a raw project idea and what it means for THIS user's career",
+  parameters: {
+    type: "object",
+    properties: {
+      title: { type: "string", description: "A clear, product-like project title derived from the idea" },
+      projectType: { type: "string" },
+      summary: { type: "string", description: "2-3 sentences describing what the project actually is" },
+      problem: { type: "string", description: "The real problem it solves, or UNKNOWN if the idea does not state one" },
+      targetUsers: { type: "array", items: { type: "string" } },
+      coreFeatures: { type: "array", description: "4-8 features the MVP genuinely needs", items: { type: "string" } },
+      technologies: {
+        type: "array",
+        description: "Recommended stack, each with the layer it serves and why it fits this idea and user",
+        items: {
+          type: "object",
+          properties: { tech: { type: "string" }, layer: { type: "string" }, why: { type: "string" } },
+          required: ["tech", "layer", "why"],
+        },
+      },
+      requiredSkills: {
+        type: "array",
+        description: "6-12 concrete skills the build genuinely requires. Use skill names, not sentences.",
+        items: {
+          type: "object",
+          properties: {
+            skill: { type: "string" },
+            importance: { type: "string", enum: ["critical", "high", "medium"] },
+            confidence: { type: "string", enum: ["known", "estimated", "inferred", "unknown"], description: "How certain this requirement is from the idea as stated" },
+            why: { type: "string", description: "Why the project needs it" },
+          },
+          required: ["skill", "importance", "confidence", "why"],
+        },
+      },
+      difficulty: { type: "string", enum: ["Beginner", "Intermediate", "Advanced", "Expert"] },
+      estimatedEffort: { type: "string", description: "Realistic effort given the user's stated hours per week, e.g. '5-6 weeks at 8h/week'" },
+      prerequisites: {
+        type: "array",
+        description: "0-4 things to learn before starting, only if genuinely missing",
+        items: { type: "object", properties: { topic: { type: "string" }, reason: { type: "string" } }, required: ["topic", "reason"] },
+      },
+      careerRelevance: {
+        type: "object",
+        properties: {
+          level: { type: "string", enum: ["High", "Medium", "Low"] },
+          why: { type: "string", description: "How this project moves THIS user toward their target role, referencing their real data" },
+          strengthens: { type: "array", items: { type: "string" }, description: "Capabilities the project strengthens" },
+        },
+        required: ["level", "why", "strengthens"],
+      },
+      targetRoles: { type: "array", items: { type: "string" }, description: "Roles this project is credible evidence for" },
+      evidence: {
+        type: "array",
+        description: "Artifacts the finished project can produce and what each one proves",
+        items: { type: "object", properties: { artifact: { type: "string" }, proves: { type: "string" } }, required: ["artifact", "proves"] },
+      },
+      missingEvidence: {
+        type: "array",
+        description: "What the idea as stated does NOT prove for the target role, and how to add it",
+        items: { type: "string" },
+      },
+      roadmap: {
+        type: "array",
+        description: "5-6 phases: Foundation, Core Build, Intelligence, Testing, Deployment, Career Evidence. Practical, not micro-tasks.",
+        items: {
+          type: "object",
+          properties: {
+            phase: { type: "string" },
+            objective: { type: "string" },
+            skills: { type: "array", items: { type: "string" } },
+            tasks: { type: "array", description: "3-6 meaningful tasks", items: { type: "string" } },
+            output: { type: "string" },
+            evidence: { type: "string" },
+          },
+          required: ["phase", "objective", "skills", "tasks", "output", "evidence"],
+        },
+      },
+      assumptions: { type: "array", items: { type: "string" }, description: "Anything you had to assume because the idea did not state it. Empty array if none." },
+    },
+    required: [
+      "title", "projectType", "summary", "problem", "targetUsers", "coreFeatures", "technologies",
+      "requiredSkills", "difficulty", "estimatedEffort", "prerequisites", "careerRelevance",
+      "targetRoles", "evidence", "missingEvidence", "roadmap", "assumptions",
+    ],
+  },
+};
+
 const SCHEMAS: Record<Mode, any> = {
+  intelligence: INTELLIGENCE_SCHEMA,
   recommend: {
     name: "project_recommendations",
     description: "Personalized project recommendations for this exact user",
@@ -382,6 +472,26 @@ Generate interview questions grounded in this project's real architecture, datab
     case "code":
       return `${base}${projectBlock(payload?.project)}
 Generate code for: "${payload?.request}". Keep it focused and idiomatic for the project's stack.`;
+    case "intelligence": {
+      const i = payload?.idea || {};
+      const opt = [
+        i.targetRole ? `Target role for this project: ${i.targetRole}` : "",
+        i.deadline ? `Deadline: ${i.deadline}` : "",
+        i.hoursPerWeek ? `Hours available per week: ${i.hoursPerWeek}` : "",
+        i.preferredTech ? `Preferred technology: ${i.preferredTech}` : "",
+        i.stage ? `Current project stage: ${i.stage}` : "",
+      ].filter(Boolean).join("\n") || "No extra constraints given.";
+      return `${base}
+
+PROJECT IDEA (raw, from the user): "${i.idea}"
+${opt}
+
+Analyse this idea as SkillNova Project Intelligence.
+- Extract only what the idea and constraints actually support. Mark uncertain requirements with confidence "estimated" or "inferred", and use the literal string "UNKNOWN" for anything you cannot determine.
+- Judge career relevance against THIS user's target role, gaps and readiness above. Do not flatter the idea — if it is weak evidence for their goal, say so and say what would fix it.
+- Never claim the user has skills, projects or verification that are not in the profile above.
+- Effort must respect the stated hours per week when given.`;
+    }
   }
 }
 
