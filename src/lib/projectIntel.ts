@@ -294,3 +294,77 @@ export function consumeHandoff(module: string): Handoff | null {
     return null;
   }
 }
+
+/* ------------------------------------------- handoff into Project Studio */
+
+const slug = (s: string, i: number) =>
+  `${s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "").slice(0, 28) || "task"}-${i}`;
+
+/**
+ * Promotes an analysed idea into the EXISTING Project Studio table.
+ * Reuses `studio_projects` — no new tables, and no duplicate row for the same title.
+ */
+export async function startProjectFromIntel(
+  userId: string,
+  intel: ProjectIntelligence,
+  cmp: IntelComparison,
+  goal: string,
+): Promise<{ id: string; created: boolean }> {
+  const { supabase } = await import("@/integrations/supabase/client");
+
+  const { data: existing } = await supabase
+    .from("studio_projects")
+    .select("id")
+    .eq("user_id", userId)
+    .eq("title", intel.title)
+    .maybeSingle();
+
+  const milestones = (intel.roadmap || []).map((p, pi) => ({
+    id: slug(p.phase, pi),
+    phase: p.phase,
+    goal: p.objective,
+    estimatedTime: "",
+    dependencies: [],
+    skillsPracticed: p.skills || [],
+    tasks: (p.tasks || []).map((t, ti) => ({ id: slug(t, pi * 100 + ti), title: t })),
+  }));
+
+  const payload = {
+    user_id: userId,
+    title: intel.title,
+    summary: intel.summary,
+    project_type: intel.projectType,
+    difficulty: intel.difficulty,
+    duration: intel.estimatedEffort,
+    status: "active",
+    source_mode: "custom",
+    goal,
+    why: intel.careerRelevance?.why || null,
+    career_relevance: intel.careerRelevance?.level || null,
+    resume_value: (intel.evidence || []).map((e) => e.artifact).join(", ") || null,
+    tech_stack: (intel.technologies || []).map((t) => t.tech),
+    skills_developed: (intel.requiredSkills || []).map((s) => s.skill),
+    skills_addressed: cmp.gaps.map((g) => g.skill),
+    prerequisites: intel.prerequisites || [],
+    milestones,
+    blueprint: {
+      overview: intel.summary,
+      problemStatement: intel.problem,
+      targetUsers: intel.targetUsers || [],
+      features: { mvp: intel.coreFeatures || [], important: [], advanced: [], optional: [] },
+      techStack: intel.technologies || [],
+      milestones,
+      knowledgeGaps: cmp.gaps.slice(0, 6).map((g) => ({ topic: g.skill, why: g.why })),
+    },
+  } as any;
+
+  if (existing?.id) {
+    const { error } = await supabase.from("studio_projects").update(payload).eq("id", existing.id);
+    if (error) throw new Error(error.message);
+    return { id: existing.id, created: false };
+  }
+
+  const { data, error } = await supabase.from("studio_projects").insert(payload).select("id").single();
+  if (error) throw new Error(error.message);
+  return { id: (data as any).id, created: true };
+}
