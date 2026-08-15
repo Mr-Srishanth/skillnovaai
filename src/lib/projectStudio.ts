@@ -5,7 +5,7 @@ import type { CareerProfile } from "@/hooks/useCareerProfile";
 /* Types                                                               */
 /* ------------------------------------------------------------------ */
 
-export type StudioMode = "recommend" | "blueprint" | "assist" | "resume" | "interview" | "code";
+export type StudioMode = "recommend" | "blueprint" | "assist" | "resume" | "interview" | "code" | "intelligence";
 export type Difficulty = "Beginner" | "Intermediate" | "Advanced" | "Expert";
 export type ProjectStatus = "saved" | "active" | "completed";
 export type SourceMode = "ai" | "gap" | "goal" | "tech" | "custom";
