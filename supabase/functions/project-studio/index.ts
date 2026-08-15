@@ -507,9 +507,10 @@ serve(async (req) => {
       });
     }
 
-    if (!profile?.goal || String(profile.goal).trim().length < 3) {
+    const goalOrRole = profile?.goal || payload?.idea?.targetRole || "";
+    if (String(goalOrRole).trim().length < 3) {
       return new Response(
-        JSON.stringify({ error: "Set your career goal first — run a Skill Analysis to unlock Project Studio.", needsProfile: true }),
+        JSON.stringify({ error: "Set your career goal first — run a Skill Analysis, or enter a target role for this project.", needsProfile: true }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -526,7 +527,7 @@ serve(async (req) => {
         model: "google/gemini-3-flash-preview",
         messages: [
           { role: "system", content: SYSTEM },
-          { role: "user", content: buildUserMessage(mode as Mode, profile, payload) },
+          { role: "user", content: buildUserMessage(mode as Mode, { ...profile, goal: goalOrRole }, payload) },
         ],
         tools: [{ type: "function", function: schema }],
         tool_choice: { type: "function", function: { name: schema.name } },
