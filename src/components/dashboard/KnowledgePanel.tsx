@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { consumeHandoff } from "@/lib/projectIntel";
 import { useCareerProfile, bumpLocalCount } from "@/hooks/useCareerProfile";
 import {
   downloadText, extractPdfText, generatePack, packToMarkdown,
@@ -71,8 +72,9 @@ const NOTEBOOK_THINKING = [
 
 const KnowledgePanel = ({ userId }: { userId: string }) => {
   const { profile } = useCareerProfile(userId);
+  const handoff = useMemo(() => consumeHandoff("knowledge"), []);
   const [sourceType, setSourceType] = useState<SourceType>("topic");
-  const [topic, setTopic] = useState("");
+  const [topic, setTopic] = useState(handoff?.topic || "");
   const [url, setUrl] = useState("");
   const [text, setText] = useState("");
   const [fileName, setFileName] = useState("");

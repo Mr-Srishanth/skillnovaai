@@ -17,7 +17,7 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { messages, userContext, recentLearning } = await req.json();
+    const { messages, userContext, recentLearning, projectContext } = await req.json();
 
     if (!messages || !Array.isArray(messages) || messages.length === 0) {
       return new Response(JSON.stringify({ error: "Messages are required." }), {
@@ -41,6 +41,25 @@ serve(async (req) => {
           .join("\n")
       : "  NOT AVAILABLE — the user has not created any knowledge packs yet.";
 
+    const pc = projectContext || null;
+    const projectBlock = pc
+      ? `
+=== CURRENT PROJECT INTELLIGENCE CONTEXT (the project the user is working on right now) ===
+Project: ${pc.title} (${pc.projectType || "type unknown"})
+What it is: ${pc.summary}
+Target role for this project: ${pc.targetRole || "NOT AVAILABLE"}
+Difficulty: ${pc.difficulty} | Estimated effort: ${pc.effort}
+Planned stack: ${listOr(pc.stack)}
+Skills the user already has evidence for: ${listOr(pc.matched, "none yet")}
+Prioritised gaps: ${(pc.gaps || []).map((g: any) => `${g.skill} (${g.priority})`).join(", ") || "none"}
+Career relevance: ${pc.relevance} — ${pc.relevanceWhy}
+Evidence still missing: ${listOr(pc.missingEvidence, "none recorded")}
+Roadmap phases: ${listOr(pc.phases)}
+Analysed next best action: ${pc.nextAction}
+When the user says "this project", "it" or asks about deployment/skills/timeline without naming a project, they mean THIS project. Never ask them to repeat it.
+=== END PROJECT CONTEXT ===`
+      : "";
+
     const contextBlock = `
 === SKILLNOVA STATE (the ONLY facts you may treat as true about this user) ===
 Career goal / target role: ${c.goal || "NOT AVAILABLE"}
@@ -60,7 +79,8 @@ Streak: ${c.streak ?? 0} days | XP: ${c.xp ?? 0} | Level: ${c.level || "Beginner
 Region: ${c.region || "India"} (salary currency: India → ₹ LPA, United States → $, United Kingdom → £, Europe → €)
 Recent learning history:
 ${learningLines}
-=== END STATE ===`;
+=== END STATE ===
+${projectBlock}`;
 
     const systemPrompt = `You are the SkillNova AI Mentor — the personal career coach inside SkillNova OS. You have been following this student's progress and you know their data. You are NOT a general assistant.
 

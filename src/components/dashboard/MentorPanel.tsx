@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import ReactMarkdown from "react-markdown";
 import type { CareerProfile } from "@/hooks/useCareerProfile";
+import { getActiveProjectContext, type ActiveProjectContext } from "@/lib/projectIntel";
 
 type Msg = { role: "user" | "assistant"; content: string };
 
@@ -67,8 +68,12 @@ const buildBriefing = (p: Partial<CareerProfile>, recent: LearningItem[]) => {
   return { focus, nextMilestone, fix, action, last };
 };
 
-const buildQuickActions = (p: Partial<CareerProfile>) => {
+const buildQuickActions = (p: Partial<CareerProfile>, project?: ActiveProjectContext | null) => {
   const out: string[] = [];
+  if (project) {
+    out.push(`Why is "${project.title}" good for my career?`);
+    if (project.gaps?.[0]) out.push(`Why is ${project.gaps[0].skill} my highest priority for this project?`);
+  }
   if (!p.goal) out.push("Help me choose a career goal");
   else out.push("What should I learn today?");
   out.push("What's my biggest gap?");
@@ -89,6 +94,7 @@ const MentorPanel = ({ userId, userContext }: Props) => {
   const [isLoading, setIsLoading] = useState(false);
   const [failed, setFailed] = useState<string | null>(null);
   const [recent, setRecent] = useState<LearningItem[]>([]);
+  const [projectContext, setProjectContext] = useState<ActiveProjectContext | null>(() => getActiveProjectContext());
   const scrollRef = useRef<HTMLDivElement>(null);
   const lastSent = useRef<string>("");
 
@@ -109,12 +115,18 @@ const MentorPanel = ({ userId, userContext }: Props) => {
   }, [userId, userContext?.knowledgePacks]);
 
   useEffect(() => {
+    const sync = () => setProjectContext(getActiveProjectContext());
+    window.addEventListener("skillnova:project-context", sync);
+    return () => window.removeEventListener("skillnova:project-context", sync);
+  }, []);
+
+  useEffect(() => {
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
   }, [messages]);
 
   const p = userContext ?? {};
   const briefing = useMemo(() => buildBriefing(p, recent), [p, recent]);
-  const quickActions = useMemo(() => buildQuickActions(p), [p]);
+  const quickActions = useMemo(() => buildQuickActions(p, projectContext), [p, projectContext]);
 
   const sendMessage = useCallback(
     async (text: string, history?: Msg[]) => {
@@ -142,6 +154,7 @@ const MentorPanel = ({ userId, userContext }: Props) => {
             messages: allMessages.map((m) => ({ role: m.role, content: m.content })),
             userContext,
             recentLearning: recent,
+            projectContext,
           }),
         });
 
@@ -231,7 +244,7 @@ const MentorPanel = ({ userId, userContext }: Props) => {
         setIsLoading(false);
       }
     },
-    [isLoading, messages, userContext, recent]
+    [isLoading, messages, userContext, recent, projectContext]
   );
 
   const retry = () => {
@@ -320,6 +333,16 @@ const MentorPanel = ({ userId, userContext }: Props) => {
                 <p className="text-sm text-foreground mt-1">{briefing.action}</p>
               </div>
             </div>
+
+            {projectContext && (
+              <div className="rounded-xl p-3 border border-border/60 bg-muted/15">
+                <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Current project context</p>
+                <p className="text-sm text-foreground mt-1">{projectContext.title}</p>
+                <p className="text-[11px] text-muted-foreground mt-0.5">
+                  {projectContext.relevance} relevance for {projectContext.targetRole} · analysed in Project Intelligence
+                </p>
+              </div>
+            )}
 
             {/* Contextual quick actions */}
             <div className="grid grid-cols-2 gap-2">

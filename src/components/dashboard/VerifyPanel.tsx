@@ -32,11 +32,13 @@ interface Result {
   nextTopic: string;
 }
 
+import { consumeHandoff } from "@/lib/projectIntel";
+
 const LEVELS = ["Beginner", "Intermediate", "Advanced"];
 
 const VerifyPanel = ({ userId }: { userId: string }) => {
   const brain = useCareerBrain(userId);
-  const [skill, setSkill] = useState("");
+  const [skill, setSkill] = useState(() => consumeHandoff("verify")?.skill || "");
   const [level, setLevel] = useState("Intermediate");
   const [assessment, setAssessment] = useState<Assessment | null>(null);
   const [answers, setAnswers] = useState<Record<string, string>>({});

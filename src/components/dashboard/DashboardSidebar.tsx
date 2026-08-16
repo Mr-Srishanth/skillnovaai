@@ -3,7 +3,7 @@ import {
   Home, Brain, Bot, FileText, Telescope, Clock, GitCompare,
   Mic, Hammer, Menu, X, LogOut, ArrowLeft, BookOpen,
   Route, Gauge, Lightbulb, Building2, Banknote, TrendingUp,
-  Briefcase, BadgeCheck, Compass, ListChecks, LineChart, Shuffle
+  Briefcase, BadgeCheck, Compass, ListChecks, LineChart, Shuffle, Sparkles
 } from "lucide-react";
 import { useState } from "react";
 import type { DashboardTab } from "@/pages/Dashboard";
@@ -50,6 +50,7 @@ const groups: { label: string; items: { id: DashboardTab; label: string; icon: t
       { id: "resume", label: "Resume ATS", icon: FileText },
       { id: "simulator", label: "Simulator", icon: Telescope },
       { id: "interview", label: "Interview", icon: Mic },
+      { id: "projectintel", label: "Project Intelligence", icon: Sparkles },
       { id: "projects", label: "Project Studio", icon: Hammer },
       { id: "history", label: "History", icon: Clock },
       { id: "compare", label: "Compare", icon: GitCompare },
