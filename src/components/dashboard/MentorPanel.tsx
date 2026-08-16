@@ -68,8 +68,12 @@ const buildBriefing = (p: Partial<CareerProfile>, recent: LearningItem[]) => {
   return { focus, nextMilestone, fix, action, last };
 };
 
-const buildQuickActions = (p: Partial<CareerProfile>) => {
+const buildQuickActions = (p: Partial<CareerProfile>, project?: ActiveProjectContext | null) => {
   const out: string[] = [];
+  if (project) {
+    out.push(`Why is "${project.title}" good for my career?`);
+    if (project.gaps?.[0]) out.push(`Why is ${project.gaps[0].skill} my highest priority for this project?`);
+  }
   if (!p.goal) out.push("Help me choose a career goal");
   else out.push("What should I learn today?");
   out.push("What's my biggest gap?");
@@ -122,7 +126,7 @@ const MentorPanel = ({ userId, userContext }: Props) => {
 
   const p = userContext ?? {};
   const briefing = useMemo(() => buildBriefing(p, recent), [p, recent]);
-  const quickActions = useMemo(() => buildQuickActions(p), [p]);
+  const quickActions = useMemo(() => buildQuickActions(p, projectContext), [p, projectContext]);
 
   const sendMessage = useCallback(
     async (text: string, history?: Msg[]) => {
