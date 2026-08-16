@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { consumeHandoff } from "@/lib/projectIntel";
 import { useCareerProfile, bumpLocalCount } from "@/hooks/useCareerProfile";
 import {
   downloadText, extractPdfText, generatePack, packToMarkdown,
