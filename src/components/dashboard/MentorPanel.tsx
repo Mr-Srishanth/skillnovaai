@@ -334,6 +334,16 @@ const MentorPanel = ({ userId, userContext }: Props) => {
               </div>
             </div>
 
+            {projectContext && (
+              <div className="rounded-xl p-3 border border-border/60 bg-muted/15">
+                <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Current project context</p>
+                <p className="text-sm text-foreground mt-1">{projectContext.title}</p>
+                <p className="text-[11px] text-muted-foreground mt-0.5">
+                  {projectContext.relevance} relevance for {projectContext.targetRole} · analysed in Project Intelligence
+                </p>
+              </div>
+            )}
+
             {/* Contextual quick actions */}
             <div className="grid grid-cols-2 gap-2">
               {quickActions.map((s) => (
