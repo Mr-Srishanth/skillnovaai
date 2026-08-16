@@ -61,7 +61,8 @@ const Chip = ({ children, tone = "muted" }: { children: React.ReactNode; tone?: 
   return <span className={`px-2.5 py-1 rounded-full border text-[11px] bg-muted/20 ${tones[tone]}`}>{children}</span>;
 };
 
-const priorityTone = (p: GapRow["priority"]) => (p === "High" ? "bad" : p === "Medium" ? "warn" : "muted") as const;
+const priorityTone = (p: GapRow["priority"]): "bad" | "warn" | "muted" =>
+  p === "High" ? "bad" : p === "Medium" ? "warn" : "muted";
 
 const ProjectIntelPanel = ({ userId }: { userId: string }) => {
   const brain = useCareerBrain(userId);
