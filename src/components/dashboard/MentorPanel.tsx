@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import ReactMarkdown from "react-markdown";
 import type { CareerProfile } from "@/hooks/useCareerProfile";
+import { getActiveProjectContext, type ActiveProjectContext } from "@/lib/projectIntel";
 
 type Msg = { role: "user" | "assistant"; content: string };
 
@@ -89,6 +90,7 @@ const MentorPanel = ({ userId, userContext }: Props) => {
   const [isLoading, setIsLoading] = useState(false);
   const [failed, setFailed] = useState<string | null>(null);
   const [recent, setRecent] = useState<LearningItem[]>([]);
+  const [projectContext, setProjectContext] = useState<ActiveProjectContext | null>(() => getActiveProjectContext());
   const scrollRef = useRef<HTMLDivElement>(null);
   const lastSent = useRef<string>("");
 
@@ -107,6 +109,12 @@ const MentorPanel = ({ userId, userContext }: Props) => {
       active = false;
     };
   }, [userId, userContext?.knowledgePacks]);
+
+  useEffect(() => {
+    const sync = () => setProjectContext(getActiveProjectContext());
+    window.addEventListener("skillnova:project-context", sync);
+    return () => window.removeEventListener("skillnova:project-context", sync);
+  }, []);
 
   useEffect(() => {
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
@@ -142,6 +150,7 @@ const MentorPanel = ({ userId, userContext }: Props) => {
             messages: allMessages.map((m) => ({ role: m.role, content: m.content })),
             userContext,
             recentLearning: recent,
+            projectContext,
           }),
         });
 
@@ -231,7 +240,7 @@ const MentorPanel = ({ userId, userContext }: Props) => {
         setIsLoading(false);
       }
     },
-    [isLoading, messages, userContext, recent]
+    [isLoading, messages, userContext, recent, projectContext]
   );
 
   const retry = () => {

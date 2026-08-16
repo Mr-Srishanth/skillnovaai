@@ -71,8 +71,9 @@ const NOTEBOOK_THINKING = [
 
 const KnowledgePanel = ({ userId }: { userId: string }) => {
   const { profile } = useCareerProfile(userId);
+  const handoff = useMemo(() => consumeHandoff("knowledge"), []);
   const [sourceType, setSourceType] = useState<SourceType>("topic");
-  const [topic, setTopic] = useState("");
+  const [topic, setTopic] = useState(handoff?.topic || "");
   const [url, setUrl] = useState("");
   const [text, setText] = useState("");
   const [fileName, setFileName] = useState("");
