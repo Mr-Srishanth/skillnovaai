@@ -50,6 +50,7 @@ const groups: { label: string; items: { id: DashboardTab; label: string; icon: t
       { id: "resume", label: "Resume ATS", icon: FileText },
       { id: "simulator", label: "Simulator", icon: Telescope },
       { id: "interview", label: "Interview", icon: Mic },
+      { id: "projectintel", label: "Project Intelligence", icon: Lightbulb },
       { id: "projects", label: "Project Studio", icon: Hammer },
       { id: "history", label: "History", icon: Clock },
       { id: "compare", label: "Compare", icon: GitCompare },
