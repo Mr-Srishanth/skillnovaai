@@ -149,24 +149,30 @@ const OverviewPanel = ({ userId, displayName }: Props) => {
 
         <motion.div
           initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
-          className="glass-card-hover card-shine p-6 text-center"
+          className="glass-card-hover card-shine p-6 text-center flex flex-col items-center justify-center min-h-[180px]"
         >
-          <div className="flex items-center justify-center gap-2 mb-4">
+          <div className="flex items-center justify-center gap-2 mb-3">
             <BarChart3 className="w-4 h-4 text-neon-purple" />
             <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">Total Analyses</p>
           </div>
-          <div className="text-4xl font-display font-black text-foreground">{animatedTotal}</div>
+          <div className="text-6xl md:text-7xl font-display font-black text-foreground leading-none tracking-tight">
+            {String(animatedTotal).padStart(2, "0")}
+          </div>
+          <p className="text-xs text-muted-foreground mt-3">Career analyses completed</p>
         </motion.div>
 
         <motion.div
           initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
-          className="glass-card-hover card-shine p-6 text-center"
+          className="glass-card-hover card-shine p-6 text-center flex flex-col items-center justify-center min-h-[180px]"
         >
-          <div className="flex items-center justify-center gap-2 mb-4">
+          <div className="flex items-center justify-center gap-2 mb-3">
             <TrendingUp className="w-4 h-4 text-neon-cyan" />
             <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">Roles Explored</p>
           </div>
-          <div className="text-4xl font-display font-black text-foreground">{animatedRoles}</div>
+          <div className="text-6xl md:text-7xl font-display font-black text-foreground leading-none tracking-tight">
+            {String(animatedRoles).padStart(2, "0")}
+          </div>
+          <p className="text-xs text-muted-foreground mt-3">Career roles analyzed</p>
         </motion.div>
       </div>
 
