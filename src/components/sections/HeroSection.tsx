@@ -76,19 +76,35 @@ const HeroSection = () => {
             </Link>
           </motion.div>
 
-          {/* Trust indicators */}
+          {/* Capability statements */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 1.5, duration: 0.8 }}
             className="flex flex-wrap gap-6 mt-8 justify-center lg:justify-start text-xs text-muted-foreground"
           >
-            {["10,000+ users", "70% faster growth", "AI-powered insights"].map((stat, i) => (
+            {[
+              "AI-powered career intelligence",
+              "Personalized skill-gap analysis",
+              "Career-to-project intelligence",
+            ].map((stat, i) => (
               <span key={i} className="flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-neon-cyan" />
                 {stat}
               </span>
             ))}
+          </motion.div>
+
+          {/* Team attribution */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 1.7, duration: 0.8 }}
+            className="mt-10 pt-4 border-t border-white/5 flex justify-center lg:justify-start"
+          >
+            <span className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground/40 font-medium">
+              Built by <span className="text-muted-foreground/70">TEAM MARVEL</span>
+            </span>
           </motion.div>
         </div>
 
@@ -145,10 +161,10 @@ const HeroSection = () => {
           >
             <div className="flex items-center gap-2 mb-1">
               <Target className="w-3.5 h-3.5 text-green-400" />
-              <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">Learner Rank</p>
+              <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">Growth Path</p>
             </div>
-            <p className="font-display font-black text-lg gradient-text">Ahead of 68%</p>
-            <p className="text-[10px] text-green-400 mt-0.5">↑ Top Performer</p>
+            <p className="font-display font-black text-lg gradient-text">Track progress</p>
+            <p className="text-[10px] text-green-400 mt-0.5">Build momentum</p>
           </motion.div>
         </div>
       </div>
