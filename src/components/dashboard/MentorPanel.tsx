@@ -90,7 +90,18 @@ const buildQuickActions = (p: Partial<CareerProfile>, project?: ActiveProjectCon
 
 const MentorPanel = ({ userId, userContext }: Props) => {
   const [messages, setMessages] = useState<Msg[]>([]);
-  const [input, setInput] = useState("");
+  const [input, setInput] = useState(() => {
+    try {
+      const q = sessionStorage.getItem("skillnova:mentor:prefill");
+      if (q) {
+        sessionStorage.removeItem("skillnova:mentor:prefill");
+        return q;
+      }
+    } catch {
+      /* optional */
+    }
+    return "";
+  });
   const [isLoading, setIsLoading] = useState(false);
   const [failed, setFailed] = useState<string | null>(null);
   const [recent, setRecent] = useState<LearningItem[]>([]);

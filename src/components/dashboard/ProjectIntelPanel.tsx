@@ -9,7 +9,7 @@ import { useCareerBrain } from "@/hooks/useCareerBrain";
 import { goToModule, matchJob } from "@/lib/careerBrain";
 import {
   analyzeIdea, compareWithBrain, intelNextAction, intelErrorMessage,
-  buildContext, setActiveProjectContext, setHandoff, startProjectFromIntel,
+  buildContext, setActiveProjectContext, setHandoff, startProjectFromIntel, consumeHandoff,
   type IdeaInput, type ProjectIntelligence, type IntelComparison, type GapRow,
 } from "@/lib/projectIntel";
 
