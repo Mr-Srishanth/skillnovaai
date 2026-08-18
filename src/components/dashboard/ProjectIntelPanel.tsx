@@ -66,7 +66,7 @@ const priorityTone = (p: GapRow["priority"]): "bad" | "warn" | "muted" =>
 
 const ProjectIntelPanel = ({ userId }: { userId: string }) => {
   const brain = useCareerBrain(userId);
-  const [form, setForm] = useState<IdeaInput>({ idea: "" });
+  const [form, setForm] = useState<IdeaInput>(() => ({ idea: consumeHandoff("projectintel")?.topic || "" }));
   const [showOptional, setShowOptional] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
