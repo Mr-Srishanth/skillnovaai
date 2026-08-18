@@ -20,6 +20,7 @@ import ProjectIntelPanel from "@/components/dashboard/ProjectIntelPanel";
 import RoadmapPanel from "@/components/dashboard/RoadmapPanel";
 import ReadinessPanel from "@/components/dashboard/ReadinessPanel";
 import CompanyReadinessPanel from "@/components/dashboard/CompanyReadinessPanel";
+import CompanyFitPanel from "@/components/dashboard/CompanyFitPanel";
 import SalaryInsightsPanel from "@/components/dashboard/SalaryInsightsPanel";
 import TrendsPanel from "@/components/dashboard/TrendsPanel";
 import InsightsPanel from "@/components/dashboard/InsightsPanel";
@@ -36,7 +37,7 @@ export type DashboardTab =
   | "overview" | "analyze" | "roadmap" | "readiness" | "insights"
   | "companies" | "salary" | "trends" | "knowledge"
   | "mentor" | "resume" | "simulator" | "history" | "compare" | "interview" | "projects"
-  | "hiring" | "verify" | "pathsim" | "opportunities" | "plan" | "analytics" | "projectintel";
+  | "companyfit" | "hiring" | "verify" | "pathsim" | "opportunities" | "plan" | "analytics" | "projectintel";
 
 const Dashboard = () => {
   const { user, loading, signOut } = useAuth();
@@ -121,6 +122,7 @@ const Dashboard = () => {
             {activeTab === "projectintel" && <ProjectIntelPanel userId={user.id} />}
             {activeTab === "projects" && <ProjectStudioPanel userId={user.id} />}
             {activeTab === "history" && <HistoryPanel userId={user.id} />}
+            {activeTab === "companyfit" && <CompanyFitPanel userId={user.id} />}
             {activeTab === "hiring" && <HiringPanel userId={user.id} />}
             {activeTab === "verify" && <VerifyPanel userId={user.id} />}
             {activeTab === "pathsim" && <PathSimulatorPanel userId={user.id} />}

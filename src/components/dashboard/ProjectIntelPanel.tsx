@@ -9,7 +9,7 @@ import { useCareerBrain } from "@/hooks/useCareerBrain";
 import { goToModule, matchJob } from "@/lib/careerBrain";
 import {
   analyzeIdea, compareWithBrain, intelNextAction, intelErrorMessage,
-  buildContext, setActiveProjectContext, setHandoff, startProjectFromIntel,
+  buildContext, setActiveProjectContext, setHandoff, startProjectFromIntel, consumeHandoff,
   type IdeaInput, type ProjectIntelligence, type IntelComparison, type GapRow,
 } from "@/lib/projectIntel";
 
@@ -66,7 +66,7 @@ const priorityTone = (p: GapRow["priority"]): "bad" | "warn" | "muted" =>
 
 const ProjectIntelPanel = ({ userId }: { userId: string }) => {
   const brain = useCareerBrain(userId);
-  const [form, setForm] = useState<IdeaInput>({ idea: "" });
+  const [form, setForm] = useState<IdeaInput>(() => ({ idea: consumeHandoff("projectintel")?.topic || "" }));
   const [showOptional, setShowOptional] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);

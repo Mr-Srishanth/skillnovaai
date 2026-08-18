@@ -33,6 +33,7 @@ const groups: { label: string; items: { id: DashboardTab; label: string; icon: t
     items: [
       { id: "readiness", label: "Readiness", icon: Gauge },
       { id: "hiring", label: "Hiring", icon: Briefcase },
+      { id: "companyfit", label: "Company Fit", icon: Building2 },
       { id: "verify", label: "Verify Skills", icon: BadgeCheck },
       { id: "opportunities", label: "Opportunities", icon: Compass },
       { id: "pathsim", label: "Path Simulator", icon: Shuffle },
