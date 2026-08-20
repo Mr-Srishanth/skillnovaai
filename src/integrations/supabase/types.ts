@@ -50,6 +50,50 @@ export type Database = {
         }
         Relationships: []
       }
+      career_decisions: {
+        Row: {
+          created_at: string
+          id: string
+          impact: string | null
+          kind: string
+          meta: Json
+          mission_id: string | null
+          reason: string | null
+          title: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          impact?: string | null
+          kind: string
+          meta?: Json
+          mission_id?: string | null
+          reason?: string | null
+          title: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          impact?: string | null
+          kind?: string
+          meta?: Json
+          mission_id?: string | null
+          reason?: string | null
+          title?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "career_decisions_mission_id_fkey"
+            columns: ["mission_id"]
+            isOneToOne: false
+            referencedRelation: "career_missions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       career_events: {
         Row: {
           created_at: string
@@ -126,6 +170,75 @@ export type Database = {
           source_url?: string | null
           status?: string
           title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      career_missions: {
+        Row: {
+          created_at: string
+          current_phase: number
+          deadline: string | null
+          gaps: Json
+          goal_text: string
+          id: string
+          interview_focus: Json
+          last_planned_at: string | null
+          learning_topics: Json
+          opportunity_targets: Json
+          phases: Json
+          progress: number
+          projects: Json
+          resume_focus: Json
+          role: string
+          status: string
+          summary: string | null
+          timeline_months: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          current_phase?: number
+          deadline?: string | null
+          gaps?: Json
+          goal_text: string
+          id?: string
+          interview_focus?: Json
+          last_planned_at?: string | null
+          learning_topics?: Json
+          opportunity_targets?: Json
+          phases?: Json
+          progress?: number
+          projects?: Json
+          resume_focus?: Json
+          role: string
+          status?: string
+          summary?: string | null
+          timeline_months?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          current_phase?: number
+          deadline?: string | null
+          gaps?: Json
+          goal_text?: string
+          id?: string
+          interview_focus?: Json
+          last_planned_at?: string | null
+          learning_topics?: Json
+          opportunity_targets?: Json
+          phases?: Json
+          progress?: number
+          projects?: Json
+          resume_focus?: Json
+          role?: string
+          status?: string
+          summary?: string | null
+          timeline_months?: number
           updated_at?: string
           user_id?: string
         }
