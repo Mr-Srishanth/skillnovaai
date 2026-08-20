@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.touch_career_missions() FROM authenticated;
