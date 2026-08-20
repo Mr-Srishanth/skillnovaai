@@ -364,6 +364,88 @@ const SCHEMAS: Record<string, any> = {
       required: ["technical", "problemSolving", "communication", "projectUnderstanding", "roleRelevance", "overall", "strengths", "weaknesses", "followUp", "weakTopic"],
     },
   },
+
+  "mission-plan": {
+    name: "career_mission",
+    description: "A complete autonomous career mission derived from one plain-language goal",
+    parameters: {
+      type: "object",
+      properties: {
+        role: { ...str, description: "canonical target role, e.g. 'AI/ML Engineer'" },
+        timelineMonths: { type: "number", description: "months until the stated deadline; infer a sensible default if unstated" },
+        outcome: { ...str, description: "the concrete outcome the learner wants, e.g. 'internship', 'full-time job'" },
+        summary: { ...str, description: "2 sentences describing the mission and how it will be achieved" },
+        requiredSkills: strArr,
+        gaps: {
+          type: "array",
+          description: "skills the learner is missing or weak in, ranked by hiring impact",
+          items: {
+            type: "object",
+            properties: {
+              skill: str,
+              severity: { type: "string", enum: ["critical", "high", "medium"] },
+              why: str,
+              closeBy: { type: "string", enum: ["learn", "build", "verify"] },
+            },
+            required: ["skill", "severity", "why", "closeBy"],
+          },
+        },
+        phases: {
+          type: "array",
+          description: "3-6 sequential phases covering foundations through hiring preparation",
+          items: {
+            type: "object",
+            properties: {
+              name: str,
+              weeks: { type: "number" },
+              focus: str,
+              skills: strArr,
+              milestones: strArr,
+            },
+            required: ["name", "weeks", "focus", "skills", "milestones"],
+          },
+        },
+        projects: {
+          type: "array",
+          description: "2-4 portfolio projects that close the biggest gaps",
+          items: {
+            type: "object",
+            properties: {
+              title: str,
+              why: str,
+              skills: strArr,
+              difficulty: { type: "string", enum: ["beginner", "intermediate", "advanced"] },
+              durationWeeks: { type: "number" },
+              stack: strArr,
+              milestones: strArr,
+              resumeImpact: str,
+            },
+            required: ["title", "why", "skills", "difficulty", "durationWeeks", "stack", "milestones", "resumeImpact"],
+          },
+        },
+        learningTopics: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: { topic: str, why: str, phase: { type: "number" } },
+            required: ["topic", "why", "phase"],
+          },
+        },
+        interviewFocus: strArr,
+        resumeFocus: strArr,
+        opportunityTargets: {
+          type: "array",
+          description: "categories of opportunities (never invented companies or postings)",
+          items: {
+            type: "object",
+            properties: { category: str, why: str, readyAfterPhase: { type: "number" } },
+            required: ["category", "why", "readyAfterPhase"],
+          },
+        },
+      },
+      required: ["role", "timelineMonths", "outcome", "summary", "requiredSkills", "gaps", "phases", "projects", "learningTopics", "interviewFocus", "resumeFocus", "opportunityTargets"],
+    },
+  },
 };
 
 const MODE_INSTRUCTIONS: Record<string, string> = {
@@ -377,6 +459,7 @@ const MODE_INSTRUCTIONS: Record<string, string> = {
   coach: "Pick exactly ONE next action with the highest impact on job readiness. Prefer proving or building over more passive learning when the learner already has knowledge but no evidence.",
   "resume-job": "Compare the resume against the job AND the evidence table. Flag any resume claim not backed by evidence. Never write a bullet containing a fact that is not already true.",
   "interview-questions": "Ground every question in the target job, the learner's real projects and their weakest verified areas. No generic questions.",
+  "mission-plan": "Turn the learner's one-line career goal into a single realistic end-to-end mission. Use the Career Brain snapshot for what they already have — never re-teach skills they have evidence for, and never claim gaps in skills they have verified. Fit the phase weeks inside the stated timeline and their daily study hours. Projects must close named gaps. Opportunity targets are CATEGORIES (e.g. 'AI/ML internships at Indian product startups'), never named companies or postings.",
   "interview-followup": "Evaluate honestly and ask a follow-up that digs into what the candidate actually said, including trade-offs and failure modes.",
 };
 
