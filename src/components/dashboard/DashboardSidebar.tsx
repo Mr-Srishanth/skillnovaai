@@ -3,7 +3,7 @@ import {
   Home, Brain, Bot, FileText, Telescope, Clock, GitCompare,
   Mic, Hammer, Menu, X, LogOut, ArrowLeft, BookOpen,
   Route, Gauge, Lightbulb, Building2, Banknote, TrendingUp,
-  Briefcase, BadgeCheck, Compass, ListChecks, LineChart, Shuffle, Sparkles
+  Rocket, Briefcase, BadgeCheck, Compass, ListChecks, LineChart, Shuffle, Sparkles
 } from "lucide-react";
 import { useState } from "react";
 import type { DashboardTab } from "@/pages/Dashboard";
@@ -21,6 +21,7 @@ const groups: { label: string; items: { id: DashboardTab; label: string; icon: t
   {
     label: "Core",
     items: [
+      { id: "mission", label: "Mission", icon: Rocket },
       { id: "overview", label: "Overview", icon: Home },
       { id: "analyze", label: "Analyze", icon: Brain },
       { id: "roadmap", label: "Roadmap", icon: Route },
