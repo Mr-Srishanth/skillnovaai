@@ -241,6 +241,17 @@ export async function createMission(
   }
   [1, 2, 3, 4, 5, 6].forEach((i) => onStep?.(i));
 
+  // models sometimes number phases from 1 — normalise to array indexes
+  const maxIdx = plan.phases.length - 1;
+  const topicPhases = plan.learningTopics.map((t) => Number(t.phase) || 0);
+  const shift = topicPhases.length && Math.min(...topicPhases) >= 1 ? 1 : 0;
+  plan.learningTopics = plan.learningTopics.map((t) => ({ ...t, phase: Math.max(0, Math.min(maxIdx, (Number(t.phase) || 0) - shift)) }));
+  plan.opportunityTargets = plan.opportunityTargets.map((o) => ({
+    ...o,
+    readyAfterPhase: Math.max(0, Math.min(maxIdx, (Number(o.readyAfterPhase) || 0) - shift)),
+  }));
+
+
   const months = Math.max(1, Math.round(plan.timelineMonths || 6));
   const deadline = new Date();
   deadline.setMonth(deadline.getMonth() + months);
@@ -288,16 +299,6 @@ export async function createMission(
     /* history is a convenience mirror — never block the mission */
   }
 
-
-  // models sometimes number phases from 1 — normalise to array indexes
-  const maxIdx = plan.phases.length - 1;
-  const topicPhases = plan.learningTopics.map((t) => Number(t.phase) || 0);
-  const shift = topicPhases.length && Math.min(...topicPhases) >= 1 ? 1 : 0;
-  plan.learningTopics = plan.learningTopics.map((t) => ({ ...t, phase: Math.max(0, Math.min(maxIdx, (Number(t.phase) || 0) - shift)) }));
-  plan.opportunityTargets = plan.opportunityTargets.map((o) => ({
-    ...o,
-    readyAfterPhase: Math.max(0, Math.min(maxIdx, (Number(o.readyAfterPhase) || 0) - shift)),
-  }));
 
   const backlog = buildBacklog(userId, plan);
 
