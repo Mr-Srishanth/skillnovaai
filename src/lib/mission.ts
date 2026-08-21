@@ -241,6 +241,17 @@ export async function createMission(
   }
   [1, 2, 3, 4, 5, 6].forEach((i) => onStep?.(i));
 
+  // models sometimes number phases from 1 — normalise to array indexes
+  const maxIdx = plan.phases.length - 1;
+  const topicPhases = plan.learningTopics.map((t) => Number(t.phase) || 0);
+  const shift = topicPhases.length && Math.min(...topicPhases) >= 1 ? 1 : 0;
+  plan.learningTopics = plan.learningTopics.map((t) => ({ ...t, phase: Math.max(0, Math.min(maxIdx, (Number(t.phase) || 0) - shift)) }));
+  plan.opportunityTargets = plan.opportunityTargets.map((o) => ({
+    ...o,
+    readyAfterPhase: Math.max(0, Math.min(maxIdx, (Number(o.readyAfterPhase) || 0) - shift)),
+  }));
+
+
   const months = Math.max(1, Math.round(plan.timelineMonths || 6));
   const deadline = new Date();
   deadline.setMonth(deadline.getMonth() + months);
@@ -274,18 +285,23 @@ export async function createMission(
   if (error || !data) throw new Error(error?.message || "Could not save your mission.");
   const mission = rowToMission(data);
 
-  // keep the classic profile in sync so every existing module inherits the goal
-  await supabase.from("profiles").update({ } as any).eq("id", userId); // no-op guard for typed client
-  await supabase.from("analysis_history").insert({
-    user_id: userId,
-    target_role: plan.role,
-    skills: brain.skills || "",
-    score: null,
-    missing_skills: plan.gaps.map((g) => g.skill) as any,
-    result: { source: "autonomous-mission", summary: plan.summary } as any,
-  } as any).then(() => undefined, () => undefined);
+  // keep the classic analysis history in sync so every existing module inherits the goal
+  try {
+    await supabase.from("analysis_history").insert({
+      user_id: userId,
+      target_role: plan.role,
+      skills: brain.skills || "",
+      missing_skills: plan.gaps.map((g) => g.skill) as any,
+      recommended_learning: plan.learningTopics.map((t) => t.topic) as any,
+      roadmap: plan.phases.map((p) => ({ phase: p.name, focus: p.focus, skills: p.skills })) as any,
+    } as any);
+  } catch {
+    /* history is a convenience mirror — never block the mission */
+  }
+
 
   const backlog = buildBacklog(userId, plan);
+
   if (backlog.length) await supabase.from("execution_tasks").insert(backlog as any);
 
   await logDecision(userId, mission.id, "GOAL_CREATED", `Mission created: ${plan.role}`, goalText, `${months}-month plan with ${plan.phases.length} phases`);

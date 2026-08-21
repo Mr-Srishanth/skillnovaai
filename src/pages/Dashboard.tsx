@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import AnimatedBackground from "@/components/AnimatedBackground";
 import DashboardSidebar from "@/components/dashboard/DashboardSidebar";
 import DashboardTopBar from "@/components/dashboard/DashboardTopBar";
+import MissionPanel from "@/components/dashboard/MissionPanel";
 import OverviewPanel from "@/components/dashboard/OverviewPanel";
 import HistoryPanel from "@/components/dashboard/HistoryPanel";
 import ComparisonPanel from "@/components/dashboard/ComparisonPanel";
@@ -34,7 +35,7 @@ import AnalyticsPanel from "@/components/dashboard/AnalyticsPanel";
 import { useCareerProfile } from "@/hooks/useCareerProfile";
 
 export type DashboardTab =
-  | "overview" | "analyze" | "roadmap" | "readiness" | "insights"
+  | "mission" | "overview" | "analyze" | "roadmap" | "readiness" | "insights"
   | "companies" | "salary" | "trends" | "knowledge"
   | "mentor" | "resume" | "simulator" | "history" | "compare" | "interview" | "projects"
   | "companyfit" | "hiring" | "verify" | "pathsim" | "opportunities" | "plan" | "analytics" | "projectintel";
@@ -42,7 +43,7 @@ export type DashboardTab =
 const Dashboard = () => {
   const { user, loading, signOut } = useAuth();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<DashboardTab>("overview");
+  const [activeTab, setActiveTab] = useState<DashboardTab>("mission");
   const [displayName, setDisplayName] = useState("");
   const { profile } = useCareerProfile(user?.id || "");
 
@@ -106,6 +107,7 @@ const Dashboard = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4 }}
           >
+            {activeTab === "mission" && <MissionPanel userId={user.id} />}
             {activeTab === "overview" && <OverviewPanel userId={user.id} displayName={displayName} />}
             {activeTab === "analyze" && <AnalyzePanel userId={user.id} />}
             {activeTab === "roadmap" && <RoadmapPanel userId={user.id} />}
